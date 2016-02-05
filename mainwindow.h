@@ -180,6 +180,7 @@ private slots:
     void saveToH5();
     void saveToCSV();
     void addMassToLib();
+    void clearMasslist();
 };
 
 #endif // MAINWINDOW_H

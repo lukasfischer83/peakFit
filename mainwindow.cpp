@@ -153,7 +153,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->plot, SIGNAL(legendClick(QCPLegend*,QCPAbstractLegendItem*,QMouseEvent*)), this, SLOT(plotLegendClicked(QCPLegend*,QCPAbstractLegendItem*,QMouseEvent*)));
     connect(ui->horizontalSlider, SIGNAL(valueChanged(int)),this, SLOT(sliderMoved(int)));
     connect(ui->btnAddMass, SIGNAL(clicked()),this,SLOT(addMassToLib()));
-
+    connect(ui->btnClear,SIGNAL(clicked()),this,SLOT(clearMasslist()));
 
     connect(ui->massList, SIGNAL(itemClicked(QListWidgetItem*)),this, SLOT(massListClicked(QListWidgetItem*)));
     connect(ui->actionLoad_Spectrum,SIGNAL(triggered()),this,SLOT(loadSpectrum()));
@@ -719,9 +719,8 @@ void MainWindow::loadSpectrum()
 
 
         // #################### Load preliminary masslist ######################
-        ui->massList->clear();
-        markersMap.clear();
-        ui->plot->clearItems();
+        clearMasslist();
+
         QVector<double> masses = get1DSliceFromH5("MassList");
 
 
@@ -1508,6 +1507,13 @@ void MainWindow::addMassToLib()
     {
         masslib.append(m);
     }
+}
+
+void MainWindow::clearMasslist()
+{
+    ui->massList->clear();
+    markersMap.clear();
+    ui->plot->clearItems();
 }
 
 
