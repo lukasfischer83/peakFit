@@ -142,6 +142,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->plot->axisRect()->setRangeDrag(Qt::Horizontal);
     ui->plot->setInteraction(QCP::iRangeZoom,true);
     ui->plot->axisRect()->setRangeZoomAxes(ui->plot->xAxis,NULL);
+    ui->plot->xAxis->setAutoTickStep(false);
+
     connect(ui->plot, SIGNAL(mouseDoubleClick(QMouseEvent*)), this, SLOT(plotDoubleClicked(QMouseEvent*)));
     connect(ui->plot, SIGNAL(mousePress(QMouseEvent*)),this,SLOT(plotDragStart(QMouseEvent*)));
     connect(ui->plot, SIGNAL(mouseMove(QMouseEvent*)),this,SLOT(plotDragMove(QMouseEvent*)));
@@ -408,6 +410,33 @@ bool hintsEnabled = false;
 
 void MainWindow::plotXRangeChanged(QCPRange newRange, QCPRange oldRange)
 {
+
+    ui->plot->xAxis->setTickStep(50);
+
+    if (newRange.size()<200)
+    {
+        ui->plot->xAxis->setTickStep(10);
+    }
+    if (newRange.size()<100)
+    {
+        ui->plot->xAxis->setTickStep(5);
+    }
+    if (newRange.size()<20)
+    {
+        ui->plot->xAxis->setTickStep(1);
+    }
+    if (newRange.size()<10)
+    {
+        ui->plot->xAxis->setTickStep(0.5);
+    }
+    if (newRange.size()<2)
+    {
+        ui->plot->xAxis->setTickStep(0.1);
+    }
+    if (newRange.size()<0.2)
+    {
+        ui->plot->xAxis->setTickStep(0.01);
+    }
     if (newRange.upper-newRange.lower < 10.0) // when zoomed in enough, show markers
     {
         if (markersEnabled == false)
@@ -486,6 +515,11 @@ void MainWindow::plotXRangeChanged(QCPRange newRange, QCPRange oldRange)
         }
         ui->plot->replot();
     }
+
+    if ((oldRange.upper < newRange.upper || oldRange.lower > newRange.lower) && ui->horizontalSlider->value()>0)
+    {
+        reloadSubSpectrum();
+    }
 }
 
 void MainWindow::sliderMoved(int i)
@@ -495,13 +529,7 @@ void MainWindow::sliderMoved(int i)
     {
         if(i>1)
         {
-            QElapsedTimer timer;
-            timer.start();
-            QVector<double> datS = get2DSliceFromH5("SumSpecs", i-1, 0, -1);
-            QVector<double> baseline = get2DSliceFromH5("BaseLines", i-1, 0, -1);
-            qDebug() << "Loading Spectrum took " << timer.elapsed() << "ms";
-            subspectraGraph->setData(totalSumSpectrum->data()->keys().toVector(),substractVectors(datS,baseline));
-
+            reloadSubSpectrum();
             subspectraGraph->setVisible(true);
         }
         else
@@ -601,6 +629,49 @@ QCPRange MainWindow::rescaleToLargestVisibleValueRange()
     ui->plot->yAxis->setRange(QCPRange(rng.lower/2,rng.upper*2).sanitizedForLogScale());
     ui->plot->replot();
     return QCPRange(globalMin,globalMax);
+}
+
+void MainWindow::reloadSubSpectrum()
+{
+    int i = ui->horizontalSlider->value();
+    QElapsedTimer timer;
+    timer.start();
+    QVector<double> v = totalSumSpectrum->data()->keys().toVector();
+    int lowerIndex = getIndexOfValueInSortedVector(&v,ui->plot->xAxis->range().lower);
+    int upperIndex = getIndexOfValueInSortedVector(&v,ui->plot->xAxis->range().upper);
+
+    QVector<double> datS = get2DSliceFromH5("SumSpecs", i-1, lowerIndex, upperIndex);
+    QVector<double> baseline = get2DSliceFromH5("BaseLines", i-1, lowerIndex, upperIndex);
+    QVector<double> massAxis = get1DSliceFromH5("MassAxis", lowerIndex, upperIndex);
+    qDebug() << "Loading Spectrum took " << timer.elapsed() << "ms";
+
+    subspectraGraph->setData(massAxis,substractVectors(datS,baseline));
+
+}
+
+int MainWindow::getIndexOfValueInSortedVector(const QVector<double> *vec, double val)
+{
+    int upperBound=vec->count()-1;
+    int lowerBound= 0;
+    int i=(vec->count()-1)/2;
+    if (vec->first()>val)
+        return 0;
+    if (vec->last()<val)
+        return vec->count()-1;
+
+    while (!(vec->at(i)<=val && vec->at(i+1)>=val))
+    {
+        if(vec->at(i)>val)
+        {
+            upperBound=i;
+            i-=qFloor(1+upperBound-lowerBound)/2;
+        } else
+        {
+            lowerBound=i;
+            i+=qFloor(1+upperBound-lowerBound)/2;
+        }
+    }
+    return i;
 }
 
 

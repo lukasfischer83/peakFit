@@ -158,6 +158,8 @@ private:
     int getSumSpecCountFromH5();
     QCPRange getVisibleValueRange(QCPGraph* graph);
     QCPRange rescaleToLargestVisibleValueRange();
+    void reloadSubSpectrum();
+    int getIndexOfValueInSortedVector(const QVector<double> *vec, double val);
 
     void fitPrepareAndCall(QCPRange range);
     double closestMarkerPosition(double x);
