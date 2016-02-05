@@ -25,9 +25,9 @@ FORMS    += mainwindow.ui
 
 INCLUDEPATH += ../libs/eigen-eigen-b30b87236a1b/Eigen
 
-win32:INCLUDEPATH += E:\Devel\Apps\libs\HDF5-1.8.16-win32-mingw\HDF5-1.8.16-win32\include
+win32:INCLUDEPATH += ../libs/HDF5-1.8.16-win32-mingw/HDF5-1.8.16-win32/include
 
-win32:LIBS += -LE:\Devel\Apps\libs\HDF5-1.8.16-win32-mingw\HDF5-1.8.16-win32\lib
+win32:LIBS += -L../libs/HDF5-1.8.16-win32-mingw/HDF5-1.8.16-win32/lib
 
 linux:LIBS += -lhdf5 -lhdf5_cpp
 win32:LIBS += \
