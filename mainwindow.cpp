@@ -3,14 +3,17 @@
 #include <QElapsedTimer>
 #include <QSettings>
 
+
+bool markersEnabled = true;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
 
     // MassList
-    element* carbon = new element("C",12.0);
     element* carbon13 = new element("C(13)",13.003355);
+    element* carbon = new element("C",12.0,carbon13);
     element* oxygen = new element("O",15.994915);
     element* nitrogen = new element("N",14.003074);
     element* sulfur = new element("S",31.97207);
@@ -161,6 +164,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionLoad_Spectrum,SIGNAL(triggered()),this,SLOT(loadSpectrum()));
     connect(ui->actionSave_Masses_To_HDF5, SIGNAL(triggered()),this, SLOT(saveToH5()));
     connect(ui->actionSave_Masslist_to_CSV, SIGNAL(triggered()), this, SLOT(saveToCSV()));
+    connect(ui->actionLoad_Masslist_from_CSV, SIGNAL(triggered()),this,SLOT(loadMassFromCSV()));
 
     //    totalSumSpectrum = ui->plot->addGraph();
     //    fittedSpectrum = ui->plot->addGraph();
@@ -265,6 +269,18 @@ void MainWindow::addMarker(double x, bool sort, bool convertFromPixel, molecule_
     massMarker* marker = new massMarker(xpos,lineMarker,listItem,molecule);
 
     markersMap.insert(xpos,marker);
+}
+
+void MainWindow::setMarkersVisible(bool visibility)
+{
+    if (markersEnabled != visibility)
+    {
+        for(int i=0;i<ui->plot->itemCount();i++)
+        {
+            ui->plot->item(i)->setVisible(visibility);
+        }
+        markersEnabled = visibility;
+    }
 }
 
 
@@ -405,7 +421,6 @@ void MainWindow::plotLegendClicked(QCPLegend *legend, QCPAbstractLegendItem *leg
 }
 
 
-bool markersEnabled = true;
 bool hintsEnabled = false;
 
 void MainWindow::plotXRangeChanged(QCPRange newRange, QCPRange oldRange)
@@ -439,24 +454,10 @@ void MainWindow::plotXRangeChanged(QCPRange newRange, QCPRange oldRange)
     }
     if (newRange.upper-newRange.lower < 10.0) // when zoomed in enough, show markers
     {
-        if (markersEnabled == false)
-        {
-            for(int i=0;i<ui->plot->itemCount();i++)
-            {
-                ui->plot->item(i)->setVisible(true);
-            }
-            markersEnabled = true;
-        }
+        setMarkersVisible(true);
 
     } else {
-        if (markersEnabled == true)
-        {
-            for(int i=0;i<ui->plot->itemCount();i++)
-            {
-                ui->plot->item(i)->setVisible(false);
-            }
-            markersEnabled = false;
-        }
+        setMarkersVisible(false);
     }
 
 
@@ -538,7 +539,10 @@ void MainWindow::sliderMoved(int i)
             subspectraGraph->setVisible(false);
             spectrumToFitTo = totalSumSpectrum;
         }
-        fitPrepareAndCall(ui->plot->xAxis->range());
+        if (ui->plot->xAxis->range().size() < 1)
+        {
+            fitPrepareAndCall(ui->plot->xAxis->range());
+        }
         ui->plot->replot();
     }
 }
@@ -754,15 +758,15 @@ QVector<double> MainWindow::substractVectors(const QVector<double> firstVector, 
 
 void MainWindow::loadSpectrum()
 {
-    const QString DEFAULT_DIR_KEY(".");
-    QSettings loadFileSettings; // Will be using application informations for correct location of your settings
+    const QString DEFAULT_DIR_KEY("SpectrumLoadPath");
+    QSettings mySettings; // Will be using application informations for correct location of your settings
 
-    QString filename = saveResultFileDialog.getOpenFileName(this,tr("Open Spectrum File"), loadFileSettings.value(DEFAULT_DIR_KEY).toString(),tr("Spectrum Files (*.hdf5)"));
+    QString filename = saveResultFileDialog.getOpenFileName(this,tr("Open Spectrum File"), mySettings.value(DEFAULT_DIR_KEY).toString(),tr("Spectrum Files (*.hdf5)"));
 
     if (filename != "")
     {
         QDir CurrentDir;
-        loadFileSettings.setValue(DEFAULT_DIR_KEY, CurrentDir.absoluteFilePath(filename));
+        mySettings.setValue(DEFAULT_DIR_KEY, CurrentDir.absoluteFilePath(filename));
 
         qDebug() << "Opening File " << filename;
         H5std_string fn(filename.toStdString());
@@ -890,6 +894,131 @@ void MainWindow::loadSpectrum()
         ui->actionSave_Masses_To_HDF5->setEnabled(true);
         ui->actionSave_Masslist_to_CSV->setEnabled(true);
         qDebug() << "Success.";
+    }
+}
+
+void MainWindow::loadMassFromCSV()
+{
+    const QString DEFAULT_DIR_KEY("MasslistCSVLoadPath");
+    QSettings mySettings; // Will be using application informations for correct location of your settings
+
+    QString filename = saveResultFileDialog.getOpenFileName(this,tr("Open Mass List"), mySettings.value(DEFAULT_DIR_KEY).toString(),tr("Mass List (*.csv)"));
+
+    if (filename != "")
+    {
+        QDir CurrentDir;
+        mySettings.setValue(DEFAULT_DIR_KEY, CurrentDir.absoluteFilePath(filename));
+        //clearMasslist();
+
+        QFile inFile(filename);
+        if (inFile.open(QIODevice::ReadOnly))
+        {
+            QTextStream stream(&inFile);
+            QString elementsline, isotopeline, elementmassline;
+            stream.readLine();
+            elementsline = stream.readLine();
+            isotopeline = stream.readLine();
+            elementmassline = stream.readLine();
+            stream.readLine();
+
+            QStringList elementNames = elementsline.split("\t");
+            QStringList isotopeNames = isotopeline.split("\t");
+            QStringList elementMassesNames = elementmassline.split("\t");
+            QVector<double> elementMasses;
+            for (int i=0;i<elementMassesNames.count();i++)
+            {
+                double mass;
+                bool successfullyParsed = false;
+                mass = elementMassesNames.at(i).toDouble(&successfullyParsed);
+                if (!successfullyParsed)
+                {
+                    qDebug() << "Masslist parse error: could not get mass of element " << elementNames.at(i) << "!";
+                }
+                elementMasses.append(mass);
+            }
+
+            QVector<element*> elementsInFile;
+
+            for (int i=0;i<elementNames.count();i++)
+            {
+                if (masslib.elements().contains(elementNames.at(i)))
+                {
+                    elementsInFile.append(masslib.elements().find(elementNames.at(i)).value());
+                } else {
+                    // need to create new element !
+                    qDebug() << "Add new element on demand - Not implemented yet!";
+                }
+            }
+
+            bool compositionsFoundInFile = true;
+
+            int massesRead = 0;
+            stream.readLine();
+            stream.readLine();
+
+            while (!stream.atEnd())
+            {
+                QString line = stream.readLine();
+                QStringList lineEntries = line.split("\t");
+                if (lineEntries.count() == elementsInFile.count() + 2)
+                {
+                    QVector<int> compositionCoefs;
+                    for (int i=0;i<elementsInFile.count();i++)
+                    {
+                        bool parseSuccess = false;
+                        compositionCoefs.append(lineEntries.at(i).toInt(&parseSuccess));
+                        if (!parseSuccess)
+                        {
+                            qDebug() << "Masslist parse error: could not get count of " << elementsInFile.at(i)->name() << " of mass " << lineEntries.at(elementsInFile.count());
+                        }
+                    }
+                    bool parseSuccess = false;
+                    double mass = lineEntries.at(elementsInFile.count()).toDouble(&parseSuccess);
+                    if (!parseSuccess)
+                    {
+                        qDebug() << "Masslist parse error: could not get mass at line \"" << line << "\"!";
+                    }
+                    molecule_t* closeMolecule = masslib.findClosestMolecule(mass);
+                    if ((qAbs(mass - closeMolecule->mass()) < 0.002))
+                    {
+                        //qDebug() << "Found very close mass in lib --> snapping " << QString::number(masses.at(i)) << " to " << QString::number(closeMolecule->mass()) << " (" << closeMolecule->name() << ")";
+                        addMarker(closeMolecule->mass(),false,false,closeMolecule);
+                    } else {
+                        if (compositionsFoundInFile )
+                        {
+                            molecule_t* m = new molecule_t();
+                            for (int i=0;i<elementsInFile.count();i++)
+                            {
+                                m->addElement(elementsInFile.at(i),compositionCoefs.at(i));
+                            }
+                            if (!masslib.contains(m->mass()))
+                            {
+                                masslib.append(m);
+                                addMarker(mass,false,false,m);
+
+                            } else {
+                                delete m;
+                                addMarker(mass,false,false);
+                            }
+                        }
+                        else // just add unknown marker if no compositions found and no close match
+                        {
+                            addMarker(mass,false,false);
+                        }
+                    }
+
+                    massesRead++;
+                }
+                else
+                {
+                    qDebug() << "Masslist parse error: column count doesn't match count of elements plus 2 (mass, name): \"" << line << "\"!";
+                }
+            }
+            qDebug() << massesRead << " masses in file";
+            markersEnabled = true;
+            setMarkersVisible(ui->plot->xAxis->range().size() < 10);
+            ui->plot->replot();
+        }
     }
 }
 
@@ -1520,15 +1649,19 @@ void MainWindow::saveToH5()
 
 void MainWindow::saveToCSV()
 {
-    const QString DEFAULT_DIR_KEY("masslist.csv");
-    QSettings csvSavePath; // Will be using application informations for correct location of your settings
+    const QString DEFAULT_DIR_KEY("MasslistCSVSavePath");
+    QSettings mySettings; // Will be using application informations for correct location of your settings
+    if (mySettings.value(DEFAULT_DIR_KEY).toString() == "")
+    {
+        mySettings.setValue(DEFAULT_DIR_KEY,"masslist.csv");
+    }
     saveResultFileDialog.setDefaultSuffix(".csv");
-    QString filename = saveResultFileDialog.getSaveFileName(this,tr("Save masslist to CSV"), csvSavePath.value(DEFAULT_DIR_KEY).toString(),tr("CSV File (*.csv)"));
+    QString filename = saveResultFileDialog.getSaveFileName(this,tr("Save masslist to CSV"), mySettings.value(DEFAULT_DIR_KEY).toString(),tr("CSV File (*.csv)"));
 
     if (filename != "")
     {
         QDir CurrentDir;
-        csvSavePath.setValue(DEFAULT_DIR_KEY, CurrentDir.absoluteFilePath(filename));
+        mySettings.setValue(DEFAULT_DIR_KEY, CurrentDir.absoluteFilePath(filename));
 
 
         QFile csvFile(filename);
@@ -1540,6 +1673,34 @@ void MainWindow::saveToCSV()
 //            {
 //                stream << QString::number(masses.at(i),'g',8) << "\n";
 //            }
+
+            // ###################### Elements ######################################
+
+            stream << "# Elements:\n";
+            QString headerline;
+            QString isotopeline;
+            QString massline;
+            for (elementLibrary_t::const_iterator it = masslib.elements().constBegin(); it != masslib.elements().constEnd(); it++)
+            {
+
+                headerline.append(it.value()->name());
+                if (it.value()->isotope() != NULL)
+                {
+                    isotopeline.append(it.value()->isotope()->name());
+                }
+
+                massline.append(QString::number(it.value()->mass(),'g',10));
+                if (it.value() != masslib.elements().last())
+                {
+                    headerline.append("\t");
+                    isotopeline.append("\t");
+                    massline.append("\t");
+                }
+            }
+            stream << headerline << "\n" << isotopeline << "\n" << massline << "\n\n";
+
+            // ###################### Masslist Header ###############################
+            stream << "# Masses:\n";
             QList<QString> MassesNames;
             for (elementLibrary_t::const_iterator it = masslib.elements().constBegin(); it != masslib.elements().constEnd(); it++)
             {
@@ -1554,7 +1715,7 @@ void MainWindow::saveToCSV()
                 {
                     stream << QString::number(it.value()->molecule()->elementCountByName(MassesNames.at(i)),'g',3) << "\t";
                 }
-                stream << QString::number(it.key(),'g',8) << "\t";
+                stream << QString::number(it.key(),'g',10) << "\t";
                 stream << it.value()->molecule()->name() << "\n";
             }
             csvFile.flush();
@@ -1585,6 +1746,7 @@ void MainWindow::clearMasslist()
     ui->massList->clear();
     markersMap.clear();
     ui->plot->clearItems();
+    ui->plot->replot();
 }
 
 

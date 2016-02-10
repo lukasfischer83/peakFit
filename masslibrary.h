@@ -8,15 +8,16 @@
 class element
 {
 public:
-    explicit element(QString name, double mass);
-    explicit element(QString name, double mass, QMap<element*,double> isotopes);
+    explicit element(QString name, double mass, element* isotope = NULL);
     double mass() const;
     QString name() const;
+
+    element *isotope() const;
 
 private:
     double m_mass;
     QString m_name;
-    QMap<element*,double> m_isotopes;
+    element* m_isotope;
 };
 
 typedef QMap<element*,int> composition_t;

@@ -44,18 +44,11 @@ molecule_t *massLibrary::findClosestMolecule(double mass)
     return closestMolecule;
 }
 
-
-element::element(QString name, double mass)
+element::element(QString name, double mass, element *isotope)
 {
     m_name = name;
     m_mass = mass;
-}
-
-element::element(QString name, double mass, QMap<element *, double> isotopes)
-{
-    m_name = name;
-    m_mass = mass;
-    m_isotopes = isotopes;
+    m_isotope = isotope;
 }
 
 double element::mass() const
@@ -66,6 +59,10 @@ double element::mass() const
 QString element::name() const
 {
     return m_name;
+}
+element *element::isotope() const
+{
+    return m_isotope;
 }
 
 

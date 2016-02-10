@@ -140,6 +140,7 @@ private:
     QCPDataMap peakshape;
     void initializeGraphs(void);
     void addMarker(double x, bool sort=true, bool convertFromPixel=false, molecule_t *molecule = NULL);
+    void setMarkersVisible(bool visibility);
     H5File* spectrumFile;
     QVector<double> get1DSliceFromH5(QString datasetName, int start=0, int end=-1);
     QVector<double> get2DSliceFromH5(QString datasetName, int secondDimIndex, int start=0, int end=-1);
@@ -179,6 +180,7 @@ private slots:
     void massListClicked(QListWidgetItem* currentItem);
     void markerRemoved(double position);
     void loadSpectrum();
+    void loadMassFromCSV();
     void saveToH5();
     void saveToCSV();
     void addMassToLib();

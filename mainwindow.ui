@@ -186,6 +186,8 @@
      <string>File</string>
     </property>
     <addaction name="actionLoad_Spectrum"/>
+    <addaction name="actionLoad_Masslist_from_CSV"/>
+    <addaction name="separator"/>
     <addaction name="actionSave_Masses_To_HDF5"/>
     <addaction name="actionSave_Masslist_to_CSV"/>
    </widget>
@@ -228,6 +230,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionLoad_Masslist_from_CSV">
+   <property name="text">
+    <string>Load Masslist from CSV</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+O</string>
    </property>
   </action>
  </widget>
