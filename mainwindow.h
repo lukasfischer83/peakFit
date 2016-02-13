@@ -183,6 +183,7 @@ private slots:
     void loadMassFromCSV();
     void saveToH5();
     void saveToCSV();
+    void saveToPDF();
     void addMassToLib();
     void clearMasslist();
 };

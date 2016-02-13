@@ -190,6 +190,7 @@
     <addaction name="separator"/>
     <addaction name="actionSave_Masses_To_HDF5"/>
     <addaction name="actionSave_Masslist_to_CSV"/>
+    <addaction name="actionExport_PDF"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -233,11 +234,25 @@
    </property>
   </action>
   <action name="actionLoad_Masslist_from_CSV">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Load Masslist from CSV</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+O</string>
+   </property>
+  </action>
+  <action name="actionExport_PDF">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Export PDF</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
    </property>
   </action>
  </widget>

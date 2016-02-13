@@ -165,6 +165,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSave_Masses_To_HDF5, SIGNAL(triggered()),this, SLOT(saveToH5()));
     connect(ui->actionSave_Masslist_to_CSV, SIGNAL(triggered()), this, SLOT(saveToCSV()));
     connect(ui->actionLoad_Masslist_from_CSV, SIGNAL(triggered()),this,SLOT(loadMassFromCSV()));
+    connect(ui->actionExport_PDF, SIGNAL(triggered()),this,SLOT(saveToPDF()));
 
     //    totalSumSpectrum = ui->plot->addGraph();
     //    fittedSpectrum = ui->plot->addGraph();
@@ -629,7 +630,7 @@ QCPRange MainWindow::rescaleToLargestVisibleValueRange()
     //        if (rng.upper>globalMax)
     //            globalMax = rng.upper;
     //    }
-    QCPRange rng = getVisibleValueRange(maxSumSpectrum);
+    QCPRange rng = getVisibleValueRange(totalSumSpectrum);
     ui->plot->yAxis->setRange(QCPRange(rng.lower/2,rng.upper*2).sanitizedForLogScale());
     ui->plot->replot();
     return QCPRange(globalMin,globalMax);
@@ -893,6 +894,8 @@ void MainWindow::loadSpectrum()
         fitter.setData(peakshapeVals,peakshapeAxis,resolution,resolutionAxis);
         ui->actionSave_Masses_To_HDF5->setEnabled(true);
         ui->actionSave_Masslist_to_CSV->setEnabled(true);
+        ui->actionLoad_Masslist_from_CSV->setEnabled(true);
+        ui->actionExport_PDF->setEnabled(true);
         qDebug() << "Success.";
     }
 }
@@ -1721,6 +1724,25 @@ void MainWindow::saveToCSV()
             csvFile.flush();
             csvFile.close();
         }
+    }
+}
+
+void MainWindow::saveToPDF()
+{
+    const QString DEFAULT_DIR_KEY("PDFSavePath");
+    QSettings mySettings; // Will be using application informations for correct location of your settings
+    if (mySettings.value(DEFAULT_DIR_KEY).toString() == "")
+    {
+        mySettings.setValue(DEFAULT_DIR_KEY,"plot.pdf");
+    }
+    saveResultFileDialog.setDefaultSuffix(".pdf");
+    QString filename = saveResultFileDialog.getSaveFileName(this,tr("Save masslist to CSV"), mySettings.value(DEFAULT_DIR_KEY).toString(),tr("PDF File (*.pdf)"));
+
+    if (filename != "")
+    {
+        QDir CurrentDir;
+        mySettings.setValue(DEFAULT_DIR_KEY, CurrentDir.absoluteFilePath(filename));
+        ui->plot->savePdf(filename, false, 0, 0, "PeakFit", "Peakfit Plot");
     }
 }
 
