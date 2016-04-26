@@ -1,4 +1,6 @@
 #include "masslibrary.h"
+#include "qmath.h"
+#include <qdebug.h>
 
 massLibrary::massLibrary() :
     QMap<double,molecule_t*>()
@@ -44,11 +46,12 @@ molecule_t *massLibrary::findClosestMolecule(double mass)
     return closestMolecule;
 }
 
-element::element(QString name, double mass, element *isotope)
+element::element(QString name, double mass, element *isotopeOf, double abundance)
 {
     m_name = name;
     m_mass = mass;
-    m_isotope = isotope;
+    m_isotopeOf = isotopeOf;
+    m_abundance = abundance;
 }
 
 double element::mass() const
@@ -60,9 +63,14 @@ QString element::name() const
 {
     return m_name;
 }
-element *element::isotope() const
+element *element::isotopeOf() const
 {
-    return m_isotope;
+    return m_isotopeOf;
+}
+
+double element::abundance() const
+{
+    return m_abundance;
 }
 
 
@@ -81,11 +89,17 @@ void molecule_t::addElement(element *e, int count)
 {
     m_composition.insert(e,count);
     m_mass = calculateMass(m_composition);
+    m_abundance = calculateAbundance(m_composition);
 }
 
 double molecule_t::mass() const
 {
     return m_mass;
+}
+
+double molecule_t::isotopicAbundance() const
+{
+    return m_abundance;
 }
 
 QString molecule_t::name() const
@@ -138,15 +152,52 @@ int molecule_t::elementCountByName(QString name)
     return 0;
 }
 
+
+double molecule_t::nCr(int n, int k)
+{
+    if (k>n)
+        return 0;
+    if (k==0)
+        return 1;
+    if (k==1)
+        return n;
+    double ret = 1;
+    for (int i=n-k+1; i<=n;i++)
+    {
+        ret *= i;
+    }
+    for (int i=1;i<=k;i++)
+    {
+        ret /= i;
+    }
+    return ret;
+}
+
 double molecule_t::calculateMass(composition_t composition)
 {
-    double mass=0;
+    double calculatedMass=0;
 
     for (composition_t::iterator it = composition.begin(); it != composition.end(); it++)
     {
-        mass += it.key()->mass() * it.value();
+        calculatedMass += it.key()->mass() * it.value();
     }
-    return mass;
+    return calculatedMass;
+}
+
+double molecule_t::calculateAbundance(composition_t composition)
+{
+    double totalAbundance = 1;
+    for (composition_t::iterator it = composition.begin(); it != composition.end(); it++)
+    {
+        if (it.key()->isotopeOf() != NULL && it.key()->isotopeOf() > 0) // If an isotope of an element is present, calculate its count and abundance
+        {
+            int countThisIsotope = it.value();
+            int countParentElement = composition.find(it.key()->isotopeOf()).value();
+            double abundance = it.key()->abundance();
+            totalAbundance = (totalAbundance * pow(abundance,countThisIsotope) * nCr(countParentElement+countThisIsotope,countThisIsotope));
+        }
+    }
+    return totalAbundance;
 }
 
 

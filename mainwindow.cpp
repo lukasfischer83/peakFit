@@ -12,15 +12,17 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 
     // MassList
-    element* carbon13 = new element("C(13)",13.003355);
-    element* carbon = new element("C",12.0,carbon13);
+    element* carbon = new element("C",12.0);
+    element* carbon13 = new element("C(13)",13.003355,carbon,0.010816);
     element* oxygen = new element("O",15.994915);
+    element* oxygen18 = new element("O(18)",17.99916, oxygen, 0.002005);
     element* nitrogen = new element("N",14.003074);
     element* sulfur = new element("S",31.97207);
     element* hydrogen = new element("H",1.007825);
     element* proton = new element("H+",1.007276);
 
     // Primary Ions
+    // H3O+
     molecule_t* m = new molecule_t();
     m->addElement(carbon13,0);
     m->addElement(carbon,0);
@@ -31,10 +33,34 @@ MainWindow::MainWindow(QWidget *parent) :
     m->addElement(proton,1);
     masslib.append(m);
 
+    // H3O+ Isotope
+    m = new molecule_t();
+    m->addElement(carbon13,0);
+    m->addElement(carbon,0);
+    m->addElement(oxygen18,1);
+    m->addElement(hydrogen,2);
+    m->addElement(nitrogen,0);
+    m->addElement(sulfur,0);
+    m->addElement(proton,1);
+    masslib.append(m);
+
+    // H3O+H2O
     m = new molecule_t();
     m->addElement(carbon13,0);
     m->addElement(carbon,0);
     m->addElement(oxygen,2);
+    m->addElement(hydrogen,4);
+    m->addElement(nitrogen,0);
+    m->addElement(sulfur,0);
+    m->addElement(proton,1);
+    masslib.append(m);
+
+    // H3O+H2O Isotope
+    m = new molecule_t();
+    m->addElement(carbon13,0);
+    m->addElement(carbon,0);
+    m->addElement(oxygen,1);
+    m->addElement(oxygen18,1);
     m->addElement(hydrogen,4);
     m->addElement(nitrogen,0);
     m->addElement(sulfur,0);
@@ -55,8 +81,8 @@ MainWindow::MainWindow(QWidget *parent) :
     double Cmax = 22;
     double OtoCmax = 1;
     double HtoCmax = 2.5;
-    double HtoCmin = 0.8;
-    double Nmax = 3;
+    double HtoCmin = 0.5;
+    //double Nmax = 3;
     double Smax = 0;
 
     for (int carb = 1; carb<=Cmax; carb++)
@@ -80,6 +106,7 @@ MainWindow::MainWindow(QWidget *parent) :
                     masslib.append(m);
 
                     // Hydrocarbon Isotopes
+                    /* no more Isotopes, they are autocreated
                     m = new molecule_t();
                     m->addElement(carbon13,1);
                     m->addElement(carbon,carb-1);
@@ -89,6 +116,7 @@ MainWindow::MainWindow(QWidget *parent) :
                     m->addElement(sulfur,sulf);
                     m->addElement(proton,1);
                     masslib.append(m);
+                    */
 
                     // NH4+ Clusters
                     m = new molecule_t();
@@ -113,7 +141,31 @@ MainWindow::MainWindow(QWidget *parent) :
                     m->addElement(proton,1);
                     masslib.append(m);
 
+                    // Organonitrates
+                    m = new molecule_t();
+                    m->addElement(carbon13,0);
+                    m->addElement(carbon,carb);
+                    m->addElement(oxygen,oxy+2);
+                    m->addElement(hydrogen,hyd-1);
+                    m->addElement(nitrogen,1);
+                    m->addElement(sulfur,sulf);
+                    m->addElement(proton,1);
+                    masslib.append(m);
+
+                    // Organonitrates
+                    m = new molecule_t();
+                    m->addElement(carbon13,0);
+                    m->addElement(carbon,carb);
+                    m->addElement(oxygen,oxy+1);
+                    m->addElement(hydrogen,hyd-1);
+                    m->addElement(nitrogen,1);
+                    m->addElement(sulfur,sulf);
+                    m->addElement(proton,1);
+                    masslib.append(m);
+
+
                     // Organonitrates Isotopes
+                    /* no more Isotopes, they are autocreated
                     m = new molecule_t();
                     m->addElement(carbon13,1);
                     m->addElement(carbon,carb-1);
@@ -123,6 +175,7 @@ MainWindow::MainWindow(QWidget *parent) :
                     m->addElement(sulfur,sulf);
                     m->addElement(proton,1);
                     masslib.append(m);
+                    */
 
                 }
             }
@@ -130,12 +183,12 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
 
-    qDebug() << "Masses: " << masslib.count();
-    qDebug() << "Elements:";
-    for (elementLibrary_t::const_iterator it = masslib.elements().constBegin(); it != masslib.elements().constEnd(); it++)
-    {
-        qDebug() << it.value()->name() << ": " << it.value()->mass();
-    }
+//    qDebug() << "Masses: " << masslib.count();
+//    qDebug() << "Elements:";
+//    for (elementLibrary_t::const_iterator it = masslib.elements().constBegin(); it != masslib.elements().constEnd(); it++)
+//    {
+//        qDebug() << it.value()->name() << ": " << it.value()->mass();
+//    }
     spectrumFile = NULL;
     ui->setupUi(this);
     ui->plot->setInteraction(QCP::iSelectItems,true);
@@ -153,7 +206,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->plot, SIGNAL(mouseRelease(QMouseEvent*)),this,SLOT(plotDragEnd(QMouseEvent*)));
     connect(ui->plot, SIGNAL(mouseWheel(QWheelEvent*)), this,SLOT(plotMouseWheel(QWheelEvent*)));
     connect(ui->plot->xAxis, SIGNAL(rangeChanged(QCPRange,QCPRange)),this,SLOT(plotXRangeChanged(QCPRange,QCPRange)));
-    connect(ui->plot,SIGNAL(markerRemoved(double)), this, SLOT(markerRemoved(double)));
+    connect(ui->plot,SIGNAL(markerRemoved(double)), this, SLOT(removeMarker(double)));
     connect(ui->plot, SIGNAL(selectionChangedByUser()),this, SLOT(plotSelectionChanged()));
     connect(ui->plot, SIGNAL(legendClick(QCPLegend*,QCPAbstractLegendItem*,QMouseEvent*)), this, SLOT(plotLegendClicked(QCPLegend*,QCPAbstractLegendItem*,QMouseEvent*)));
     connect(ui->horizontalSlider, SIGNAL(valueChanged(int)),this, SLOT(sliderMoved(int)));
@@ -167,18 +220,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionLoad_Masslist_from_CSV, SIGNAL(triggered()),this,SLOT(loadMassFromCSV()));
     connect(ui->actionExport_PDF, SIGNAL(triggered()),this,SLOT(saveToPDF()));
 
-    //    totalSumSpectrum = ui->plot->addGraph();
-    //    fittedSpectrum = ui->plot->addGraph();
-
     ui->peakshapePlot->addGraph();
     ui->peakshapePlot->yAxis->setScaleType(QCPAxis::stLogarithmic);
     ui->peakshapePlot->hide();
-    //    for (double i=0;i<10000; i+=1)
-    //    {
-    //        addMarker(i);
-    //    }
     ui->plot->replot();
-    draggedItem = 0;
+    draggedMarker = NULL;
 }
 
 MainWindow::~MainWindow()
@@ -191,6 +237,7 @@ void MainWindow::initializeGraphs()
     hintPen.setColor(QColor(0,0,0,32));
     identifiedPen.setColor(QColor(0,192,0));
     unidentifiedPen.setColor(QColor(0,0,0));
+    autoPen.setColor(QColor(192,0,192));
 
     // ################ Total sum spectrum ##############################
     totalSumSpectrum = ui->plot->addGraph();
@@ -239,8 +286,29 @@ void MainWindow::initializeGraphs()
 
 }
 
-void MainWindow::addMarker(double x, bool sort, bool convertFromPixel, molecule_t* molecule)
+massMarker* MainWindow::addMarker(double x, bool sort, bool convertFromPixel, molecule_t* molecule, massMarker* isotopeParent)
 {
+    massMarker* marker;
+    if (markersMap.contains(x))
+    {
+        if (isotopeParent != NULL) // If marker is present but should be an isotope, delete it and proceed
+        {
+            removeMarker(x);
+        }
+        else
+        {
+        marker = markersMap.find(x).value();
+        return marker;
+        }
+    }
+
+    if (isotopeMarkersMap.contains(x))
+    {
+            // if it's in isotope list, it is an isotope --> no overwriting.
+            marker = isotopeMarkersMap.find(x).value();
+            return marker;
+    }
+
     QCPItemStraightLine* lineMarker = new QCPItemStraightLine(ui->plot);
     ui->plot->addItem(lineMarker);
     lineMarker->point1->setAxes(totalSumSpectrum->keyAxis(),totalSumSpectrum->valueAxis());
@@ -250,26 +318,101 @@ void MainWindow::addMarker(double x, bool sort, bool convertFromPixel, molecule_
         xpos = totalSumSpectrum->keyAxis()->pixelToCoord(x);
     lineMarker->point1->setCoords(xpos,1e-8);
     lineMarker->point2->setCoords(xpos,1e8);
-    lineMarker->setSelectable(true);
+    lineMarker->setSelectable((isotopeParent == NULL));
+
+    // Create corresponding item in masslist
     myQListWidgetItem* listItem = new myQListWidgetItem(xpos);
     if (molecule == NULL)
     {
-        //listItem->setBackgroundColor(QColor(255,0,0,20));
         lineMarker->setPen(unidentifiedPen);
     } else {
-        listItem->setBackgroundColor(QColor(0,255,0,20));
-        lineMarker->setPen(identifiedPen);
+        if (isotopeParent != NULL)
+        {
+            listItem->setBackgroundColor(QColor(255,0,255,20));
+            lineMarker->setPen(autoPen);
+        }
+        else
+        {
+            listItem->setBackgroundColor(QColor(0,255,0,20));
+            lineMarker->setPen(identifiedPen);
+        }
     }
-    //    QListWidgetItem* listItem = new QListWidgetItem(QString::number(xpos));
     ui->massList->addItem(listItem);
     if (sort)
     {
         //ui->massList->sortItems();
     }
 
-    massMarker* marker = new massMarker(xpos,lineMarker,listItem,molecule);
+    // Link masslist item, line marker and molecule into new marker and add to marker list
+    if (isotopeParent == NULL)
+    {
+        marker = new massMarker(xpos,lineMarker,listItem,molecule);
+        markersMap.insert(xpos,marker);
+    }
+    else
+    {
+        marker = new massMarker(xpos,lineMarker,listItem,molecule);
+        marker->isotopeParent = isotopeParent;
+        isotopeParent->linkedIsotopes.append(marker);
+        isotopeMarkersMap.insert(xpos,marker);
+    }
+    return marker;
+}
 
-    markersMap.insert(xpos,marker);
+QList<massMarker *> MainWindow::addIsotopesToMarker(massMarker *marker)
+{
+    QList<massMarker*> createdMarkers;
+    if (marker->molecule() != NULL)
+    {
+        molecule_t* molecule = marker->molecule();
+        element* carb = masslib.elements().find("C").value();
+        element* carb13 =  masslib.elements().find("C(13)").value();
+        element* nitro =  masslib.elements().find("N").value();
+        element* oxy =  masslib.elements().find("O").value();
+        element* oxy18 =  masslib.elements().find("O(18)").value();
+        // Create Isotopes
+        // Carbon
+        if(molecule->composition().contains(carb) && molecule->composition().find(carb).value()>0)
+        {
+            molecule_t* isotope1 = new molecule_t();
+            *isotope1 = *molecule;
+            int newCarb13 = 1;
+            if (molecule->composition().contains(carb13))
+                newCarb13 = molecule->composition().find(carb13).value()+1;
+
+            isotope1->addElement(carb13,newCarb13);
+            isotope1->addElement(carb,molecule->composition().find(carb).value()-1);
+            createdMarkers.append(addMarker(isotope1->mass(),false,false,isotope1,marker));
+
+            if (molecule->composition().find(carb).value()>1)
+
+            {
+                molecule_t* isotope2 = new molecule_t();
+                *isotope2 = *isotope1;
+                int newCarb13 = 2;
+                if (molecule->composition().contains(carb13))
+                    newCarb13 = molecule->composition().find(carb13).value()+2;
+
+                isotope2->addElement(carb13,newCarb13);
+                isotope2->addElement(carb,molecule->composition().find(carb).value()-2);
+                createdMarkers.append(addMarker(isotope2->mass(),false,false,isotope2,marker));
+            }
+
+        }
+        // Oxygen
+        if(molecule->composition().contains(oxy) && molecule->composition().find(oxy).value()>2) // Only when abundance > 0.4%
+        {
+            molecule_t* isotope1 = new molecule_t();
+            *isotope1 = *molecule;
+            int newOxy18 = 1;
+            if (molecule->composition().contains(oxy18))
+                newOxy18 = molecule->composition().find(oxy18).value()+1;
+            isotope1->addElement(oxy18,newOxy18);
+            isotope1->addElement(oxy,molecule->composition().find(oxy).value()-1);
+            createdMarkers.append(addMarker(isotope1->mass(),false,false,isotope1,marker));
+        }
+    }
+    return createdMarkers;
 }
 
 void MainWindow::setMarkersVisible(bool visibility)
@@ -289,26 +432,34 @@ void MainWindow::setMarkersVisible(bool visibility)
 void MainWindow::plotDoubleClicked(QMouseEvent *mouseEvent)
 {
     addMarker(mouseEvent->localPos().x(),true,true);
+    fitPrepareAndCall(ui->plot->xAxis->range());
 }
 
 void MainWindow::plotDragStart(QMouseEvent *mouseEvent)
 {
     QCPAbstractItem* itemUnderMouse = ui->plot->itemAt(mouseEvent->pos(),true);
+    if(itemUnderMouse != 0 )
+        qDebug() << "itemUnderMouse x(): " << ((QCPItemStraightLine*) itemUnderMouse)->point1->coords().x();
     if(itemUnderMouse != 0 \
             && itemUnderMouse->visible()\
             && markersMap.contains(((QCPItemStraightLine*) itemUnderMouse)->point1->coords().x())\
             && markersMap.find(((QCPItemStraightLine*) itemUnderMouse)->point1->coords().x()).value()->plotMarker() == itemUnderMouse )
     {
-        draggedItem = (QCPItemStraightLine*) itemUnderMouse;
-        markerRemoved(draggedItem->point1->coords().x());
+
+        //draggedItem = (QCPItemStraightLine*) itemUnderMouse;
+        draggedMarker = markersMap.find(((QCPItemStraightLine*) itemUnderMouse)->point1->coords().x()).value();
+        //removeMarker(draggedItem->point1->coords().x());
+        removeMarker(draggedMarker->mass());
         ui->plot->setInteraction(QCP::iRangeDrag,false);
     }
 }
 
 void MainWindow::plotDragMove(QMouseEvent *mouseEvent)
 {
-    if (draggedItem != 0)
+    //if (draggedItem != 0)
+    if (draggedMarker != NULL)
     {
+        QCPItemStraightLine* draggedItem = draggedMarker->plotMarker();
         // Do drag calculation stuff
         double xpos = totalSumSpectrum->keyAxis()->pixelToCoord(mouseEvent->pos().x());
         double closestMarkerX = closestMarkerPosition(xpos);
@@ -320,20 +471,26 @@ void MainWindow::plotDragMove(QMouseEvent *mouseEvent)
             draggedItem->point1->setCoords(xpos,1e-8);
             draggedItem->point2->setCoords(xpos,1e8);
         }
+        draggedMarker->updateMass();
         fitPrepareAndCall(ui->plot->xAxis->range());
         ui->plot->replot();
     }
     else // ########### Range Drag --> rescale ###############
     {
         if (mouseEvent->button() == Qt::LeftButton)
-            rescaleToLargestVisibleValueRange();
+            ui->plot->rescaleToLargestVisibleValueRange();
     }
 }
 
 void MainWindow::plotDragEnd(QMouseEvent *mouseEvent)
 {
-    if (draggedItem != 0)
+    //if (draggedItem != 0)
+    if (draggedMarker != NULL)
     {
+        // One final fit
+        fitPrepareAndCall(ui->plot->xAxis->range());
+        ui->plot->replot();
+
         // Do drop calculation stuff and end drag process
         double xpos = totalSumSpectrum->keyAxis()->pixelToCoord(mouseEvent->pos().x());
         double closestMarkerX = closestMarkerPosition(xpos);
@@ -347,34 +504,38 @@ void MainWindow::plotDragEnd(QMouseEvent *mouseEvent)
             newpos = xpos;
             molecule = NULL;
         }
-        draggedItem->point1->setCoords(newpos,1e-8);
-        draggedItem->point2->setCoords(newpos,1e8);
+        draggedMarker->plotMarker()->point1->setCoords(newpos,1e-8);
+        draggedMarker->plotMarker()->point2->setCoords(newpos,1e8);
+        ui->plot->removeItem(draggedMarker->plotMarker());
+        markersMap.remove(newpos);
 
         if (markersMap.contains(newpos))
         {
-            ui->plot->removeItem(draggedItem);
+            //ui->plot->removeItem(draggedItem);
         } else {
-            ui->plot->removeItem(draggedItem);
-            addMarker(newpos,false,false,molecule);
-//            QListWidgetItem* listItem = new QListWidgetItem(QString::number(newpos));
-//            ui->massList->addItem(listItem);
-//            listItem->setSelected(draggedItem->selected());
-//            massMarker* marker = new massMarker(newpos,draggedItem,listItem,molecule);
-//            markersMap.insert(newpos,marker);
+            //ui->plot->removeItem(draggedItem);
+            massMarker* marker = addMarker(newpos,false,false,molecule);
+            if (molecule != NULL)
+            {
+                addIsotopesToMarker(marker);
+            }
         }
-        draggedItem = 0;
+        //draggedItem = 0;
+        draggedMarker->deleteLater();
+        draggedMarker = NULL;
+
         ui->plot->setInteraction(QCP::iRangeDrag,true);
     }
     else // ########### Range Drag --> rescale ###############
     {
-        rescaleToLargestVisibleValueRange();
+        ui->plot->rescaleToLargestVisibleValueRange();
     }
     //qDebug() << markersMap;
 }
 
 void MainWindow::plotMouseWheel(QWheelEvent *mouseWheelEvent)
 {
-    rescaleToLargestVisibleValueRange();
+    ui->plot->rescaleToLargestVisibleValueRange();
 }
 
 void MainWindow::plotSelectionChanged()
@@ -411,6 +572,7 @@ void MainWindow::plotLegendClicked(QCPLegend *legend, QCPAbstractLegendItem *leg
                 {
                     spectrumToFitTo = legend->parentPlot()->graph(i);
                     fitPrepareAndCall(ui->plot->xAxis->range());
+                    fitPrepareAndCall(ui->plot->xAxis->range()); // two times so isotope parents are prepared
                 }
             }
         }
@@ -422,10 +584,10 @@ void MainWindow::plotLegendClicked(QCPLegend *legend, QCPAbstractLegendItem *leg
 }
 
 
-bool hintsEnabled = false;
 
 void MainWindow::plotXRangeChanged(QCPRange newRange, QCPRange oldRange)
 {
+    ui->plot->rescaleToLargestVisibleValueRange();
 
     ui->plot->xAxis->setTickStep(50);
 
@@ -471,50 +633,91 @@ void MainWindow::plotXRangeChanged(QCPRange newRange, QCPRange oldRange)
     }
 
 
-    if (newRange.upper-newRange.lower < 0.3) // when zoomed in enough, show mass hints
+    if (newRange.upper-newRange.lower <= 0.5) // when zoomed in enough, show mass hints
     {
-        if (hintsEnabled == false)
+        // delete all
+        for (int i=0;i<massHints.count();i++)
         {
-            for (massLibrary::iterator it = masslib.lowerBound(newRange.lower); it != masslib.lowerBound(newRange.upper);it++)
-            {
-                QCPItemStraightLine* line = new QCPItemStraightLine(ui->plot);
-                line->setSelectable(false);
-                line->setPen(hintPen);
-                line->point1->setCoords(it.value()->mass(),1e-6);
-                line->point2->setCoords(it.value()->mass(),1e6);
-
-
-                QCPItemText* text = new QCPItemText(ui->plot);
-                text->setSelectable(false);
-                text->setPen(Qt::NoPen);
-                text->setText(it.value()->name());
-                text->setRotation(270);
-                text->setPositionAlignment(Qt::AlignRight);
-                text->position->setCoords(it.value()->mass(),ui->plot->yAxis->range().upper);
-
-                ui->plot->addItem(text);
-                ui->plot->addItem(line);
-
-                massHints.append(text);
-                massHints.append(line);
-                massHintPositions.append(it.value()->mass());
-            }
-            hintsEnabled = true;
-            ui->plot->replot();
+            ui->plot->removeItem(massHints.at(i));
         }
+        massHints.clear();
+        massHintPositions.clear();
+
+        // create all
+        for (massLibrary::iterator it = masslib.lowerBound(newRange.lower); it != masslib.lowerBound(newRange.upper);it++)
+        {
+            QCPItemStraightLine* line = new QCPItemStraightLine(ui->plot);
+            line->setSelectable(false);
+            line->setPen(hintPen);
+            line->point1->setCoords(it.value()->mass(),1e-6);
+            line->point2->setCoords(it.value()->mass(),1e6);
+
+
+            QCPItemText* text = new QCPItemText(ui->plot);
+            text->setSelectable(false);
+            text->setPen(Qt::NoPen);
+            text->setText(it.value()->name());
+            text->setRotation(270);
+            text->setPositionAlignment(Qt::AlignRight);
+            text->position->setCoords(it.value()->mass(),ui->plot->yAxis->range().upper);
+
+            ui->plot->addItem(text);
+            ui->plot->addItem(line);
+
+            massHints.append(text);
+            massHints.append(line);
+            massHintPositions.append(it.value()->mass());
+        }
+        ui->plot->replot();
+//        if (hintsEnabled == false)
+//        {
+//            for (massLibrary::iterator it = masslib.lowerBound(newRange.lower); it != masslib.lowerBound(newRange.upper);it++)
+//            {
+//                QCPItemStraightLine* line = new QCPItemStraightLine(ui->plot);
+//                line->setSelectable(false);
+//                line->setPen(hintPen);
+//                line->point1->setCoords(it.value()->mass(),1e-6);
+//                line->point2->setCoords(it.value()->mass(),1e6);
+
+
+//                QCPItemText* text = new QCPItemText(ui->plot);
+//                text->setSelectable(false);
+//                text->setPen(Qt::NoPen);
+//                text->setText(it.value()->name());
+//                text->setRotation(270);
+//                text->setPositionAlignment(Qt::AlignRight);
+//                text->position->setCoords(it.value()->mass(),ui->plot->yAxis->range().upper);
+
+//                ui->plot->addItem(text);
+//                ui->plot->addItem(line);
+
+//                massHints.append(text);
+//                massHints.append(line);
+//                massHintPositions.append(it.value()->mass());
+//            }
+//            hintsEnabled = true;
+//            ui->plot->replot();
+//        }
     }
     else
     {
-        if (hintsEnabled == true)
+        // delete all
+        for (int i=0;i<massHints.count();i++)
         {
-            for (int i=0;i<massHints.count();i++)
-            {
-                ui->plot->removeItem(massHints.at(i));
-            }
-            massHints.clear();
-            massHintPositions.clear();
-            hintsEnabled = false;
+            ui->plot->removeItem(massHints.at(i));
         }
+        massHints.clear();
+        massHintPositions.clear();
+//        if (hintsEnabled == true)
+//        {
+//            for (int i=0;i<massHints.count();i++)
+//            {
+//                ui->plot->removeItem(massHints.at(i));
+//            }
+//            massHints.clear();
+//            massHintPositions.clear();
+//            hintsEnabled = false;
+//        }
         ui->plot->replot();
     }
 
@@ -543,6 +746,7 @@ void MainWindow::sliderMoved(int i)
         if (ui->plot->xAxis->range().size() < 1)
         {
             fitPrepareAndCall(ui->plot->xAxis->range());
+            fitPrepareAndCall(ui->plot->xAxis->range()); // two times, so the isotope parents are prepared
         }
         ui->plot->replot();
     }
@@ -568,87 +772,64 @@ void MainWindow::massListClicked(QListWidgetItem *currentItem)
             item->setSelected(false);
         }
 
-        ui->plot->xAxis->setRange(it.value()->mass(),1,Qt::AlignCenter);
         marker->plotMarker()->setSelected(true);
     }
-    rescaleToLargestVisibleValueRange();
+    ui->plot->xAxis->setRange(currentItem->text().toDouble(),ui->plot->xAxis->range().size(),Qt::AlignCenter);
+    ui->plot->rescaleToLargestVisibleValueRange();
     ui->plot->setFocus();
     ui->plot->replot();
 }
 
-void MainWindow::markerRemoved(double position)
+void MainWindow::removeMarker(double position)
 {
-    ui->massList->clearSelection();
-    ui->massList->removeItemWidget( markersMap.find(position).value()->listItem());
-    delete markersMap.find(position).value()->listItem();
-    markersMap.remove(position);
-    fitPrepareAndCall(ui->plot->xAxis->range());
-}
-
-
-QCPRange MainWindow::getVisibleValueRange(QCPGraph *graph)
-{
-    // ############################### STILL BUGGY AND SLOW ########################
-    if (graph != NULL && graph->data()->count() > 0)
+    if (markersMap.contains(position))
     {
-        QCPDataMap* data = graph->data();
-        QCPRange rng = graph->keyAxis()->range();
-        QCPDataMap::iterator it, itUp;
-        if (rng.lower < data->first().key)
-            it = data->begin();
-        else
-            it = data->lowerBound(rng.lower);
-
-        if (rng.upper > data->last().key)
-            itUp = data->end();
-        else
-            itUp = data->lowerBound(rng.upper);
-
-        double min = 1e10;
-        double max = 1e-10;
-        while (it++ != itUp) {
-            if (it.value().value > max)
-                max=it.value().value;
-            if (it.value().value < min && it.value().value>1e-6)
-                min=it.value().value;
+        ui->massList->clearSelection();
+        massMarker* currentMarker = markersMap.find(position).value();
+        // remove all linked isotopes
+        for (int i=0;i<markersMap.find(position).value()->linkedIsotopes.count(); i++)
+        {
+            massMarker* currentIsotopeMarker = markersMap.find(position).value()->linkedIsotopes.at(i);
+            removeIsotopeMarker(currentIsotopeMarker->mass());
         }
-        qDebug() << "Rescale Range: Lower: " << min << " Upper: " << max;
-        return  QCPRange(min,max);
+        currentMarker->linkedIsotopes.clear();
+        // remove marker
+        ui->massList->removeItemWidget( currentMarker->listItem());
+        delete currentMarker->listItem();
+        markersMap.remove(position);
+        //delete currentMarker;
+        fitPrepareAndCall(ui->plot->xAxis->range());
     }
-    return QCPRange(0,0);
 }
 
-QCPRange MainWindow::rescaleToLargestVisibleValueRange()
+void MainWindow::removeIsotopeMarker(double position)
 {
-    double globalMin = 1e10;
-    double globalMax = -1e10;
-    //    for (int i = 0; i<ui->plot->graphCount()-1;i++)
-    //    {
-    //        QCPRange rng = getVisibleValueRange(ui->plot->graph(i));
-    //        if (rng.lower<globalMin)
-    //            globalMin = rng.lower;
-    //        if (rng.upper>globalMax)
-    //            globalMax = rng.upper;
-    //    }
-    QCPRange rng = getVisibleValueRange(totalSumSpectrum);
-    ui->plot->yAxis->setRange(QCPRange(rng.lower/2,rng.upper*2).sanitizedForLogScale());
-    ui->plot->replot();
-    return QCPRange(globalMin,globalMax);
+    if (isotopeMarkersMap.contains(position))
+    {
+        ui->massList->clearSelection();
+        massMarker* currentMarker = isotopeMarkersMap.find(position).value();
+        ui->massList->removeItemWidget(currentMarker->listItem());
+        delete currentMarker->listItem();
+        ui->plot->removeItem(currentMarker->plotMarker());
+        isotopeMarkersMap.remove(currentMarker->mass());
+    }
 }
+
+
 
 void MainWindow::reloadSubSpectrum()
 {
     int i = ui->horizontalSlider->value();
-    QElapsedTimer timer;
-    timer.start();
+    //QElapsedTimer timer;
+    //timer.start();
     QVector<double> v = totalSumSpectrum->data()->keys().toVector();
-    int lowerIndex = getIndexOfValueInSortedVector(&v,ui->plot->xAxis->range().lower);
-    int upperIndex = getIndexOfValueInSortedVector(&v,ui->plot->xAxis->range().upper);
+    int lowerIndex = getIndexOfValueInSortedVector(&v,ui->plot->xAxis->range().lower-2.5);
+    int upperIndex = getIndexOfValueInSortedVector(&v,ui->plot->xAxis->range().upper+0.5);
 
     QVector<double> datS = get2DSliceFromH5("SumSpecs", i-1, lowerIndex, upperIndex);
     QVector<double> baseline = get2DSliceFromH5("BaseLines", i-1, lowerIndex, upperIndex);
     QVector<double> massAxis = get1DSliceFromH5("MassAxis", lowerIndex, upperIndex);
-    qDebug() << "Loading Spectrum took " << timer.elapsed() << "ms";
+    //qDebug() << "Loading Spectrum took " << timer.elapsed() << "ms";
 
     subspectraGraph->setData(massAxis,substractVectors(datS,baseline));
 
@@ -680,15 +861,18 @@ int MainWindow::getIndexOfValueInSortedVector(const QVector<double> *vec, double
 }
 
 
-void MainWindow::fitPrepareAndCall(QCPRange range)
+double MainWindow::fitPrepareAndCall(QCPRange range)
 {
-    QVector<double> massAxis,values,massesAll, masses;
+    QVector<double> massAxis,values,massesAll, masses, fixedMasses, fixedMassesCoeffs;
     double margin = 0.5; // include margin outside visible range in calculations
+    double lowerFittingRange, upperFittingRange;
+    lowerFittingRange = range.lower-margin-2; // include two masses down, so parents of isotopes get refitted
+    upperFittingRange = range.upper+margin;
+
     QCPDataMap::iterator it, itUp;
-    //    it = totalSumSpectrum->data()->lowerBound(range.lower-margin);
-    //    itUp = totalSumSpectrum->data()->lowerBound(range.upper+margin);
-    it = spectrumToFitTo->data()->lowerBound(range.lower-margin);
-    itUp = spectrumToFitTo->data()->lowerBound(range.upper+margin);
+
+    it = spectrumToFitTo->data()->lowerBound(lowerFittingRange-0.2); // add a little bit more to get the outermost masses right
+    itUp = spectrumToFitTo->data()->lowerBound(upperFittingRange+0.2);
 
     double min = 1e10;
     double max = 1e-10;
@@ -696,19 +880,54 @@ void MainWindow::fitPrepareAndCall(QCPRange range)
         values.append(it.value().value);
         massAxis.append(it.value().key);
     }
-    massesAll = markersMap.keys().toVector();
-    for (int i=0;i<massesAll.count();i++)
+    // Find markers in Range
+
+    QList<markersMap_t::iterator> fittedMarkers; // keep track of what we fitted, we will then fill in the coeffs.
+    for (markersMap_t::iterator iter = markersMap.begin(); iter != markersMap.end(); iter++)
     {
-        if (massesAll.at(i)>range.lower-margin && massesAll.at(i)<range.upper+margin)
-            masses.append(massesAll.at(i));
+        if(iter.value()->mass()>lowerFittingRange && iter.value()->mass()<upperFittingRange)
+        {
+            masses.append(iter.value()->mass());
+            fittedMarkers.append(iter); // keep track of what we fitted, we will then fill in the coeffs.
+        }
     }
-    if (draggedItem != 0)
+
+    element* carb =  masslib.elements().find("C").value();
+    for (markersMap_t::iterator iter = isotopeMarkersMap.begin(); iter != isotopeMarkersMap.end(); iter++)
     {
-        masses.append((draggedItem->point1->coords().x()));
+        if(iter.value()->mass()>lowerFittingRange && iter.value()->mass()<upperFittingRange)
+        {
+            double lastFitCoeff = iter.value()->isotopeParent->lastFitCoeff ;
+            if (lastFitCoeff == lastFitCoeff) // check for NaN, strange c++ style
+            {
+                fixedMasses.append(iter.value()->mass());
+                fixedMassesCoeffs.append(iter.value()->isotopeParent->lastFitCoeff * iter.value()->molecule()->isotopicAbundance());
+            }
+        }
     }
-    QVector<double> fittedValues = fitter.fit(massAxis,values,masses);
-    fittedSpectrum->setData(massAxis, fittedValues);
+
+    // Is there a dragged Mass? Add it.
+    //if (draggedItem != 0)
+    if (draggedMarker != NULL)
+    {
+        //masses.append((draggedItem->point1->coords().x()));
+        masses.append(draggedMarker->mass());
+    }
+    fitterResult_t fitterResult = fitter.fit(massAxis,values,masses,fixedMasses, fixedMassesCoeffs);
+    fittedSpectrum->setData(massAxis, fitterResult.fittedSpectrum);
     ui->plot->replot();
+    if (fitterResult.massCoefficients.count()>0)
+    {
+        for (int i=0; i< fittedMarkers.count(); i++)
+        {
+            fittedMarkers.at(i).value()->lastFitCoeff = fitterResult.massCoefficients.at(i);
+        }
+        return fitterResult.massCoefficients.last();
+    }
+    else
+    {
+        return 0; // return last mass fit coefficient (which is the one dragged)
+    }
 }
 
 double MainWindow::closestMarkerPosition(double x)
@@ -830,7 +1049,9 @@ void MainWindow::loadSpectrum()
             if ((qAbs(masses.at(i) - closeMolecule->mass()) < 0.002))
             {
                 //qDebug() << "Found very close mass in lib --> snapping " << QString::number(masses.at(i)) << " to " << QString::number(closeMolecule->mass()) << " (" << closeMolecule->name() << ")";
-                addMarker(closeMolecule->mass(),false,false,closeMolecule);
+                massMarker* marker = addMarker(closeMolecule->mass(),false,false,closeMolecule);
+                addIsotopesToMarker(marker);
+
             } else {
                 if (compositionsFoundInFile )
                 {
@@ -843,7 +1064,8 @@ void MainWindow::loadSpectrum()
                     if (!masslib.contains(m->mass()))
                     {
                         masslib.append(m);
-                        addMarker(masses.at(i),false,false,m);
+                        massMarker* marker = addMarker(masses.at(i),false,false,m);
+                        addIsotopesToMarker(marker);
 
                     } else {
                         delete m;
@@ -985,7 +1207,7 @@ void MainWindow::loadMassFromCSV()
                     if ((qAbs(mass - closeMolecule->mass()) < 0.002))
                     {
                         //qDebug() << "Found very close mass in lib --> snapping " << QString::number(masses.at(i)) << " to " << QString::number(closeMolecule->mass()) << " (" << closeMolecule->name() << ")";
-                        addMarker(closeMolecule->mass(),false,false,closeMolecule);
+                        addIsotopesToMarker(addMarker(closeMolecule->mass(),false,false,closeMolecule));
                     } else {
                         if (compositionsFoundInFile )
                         {
@@ -998,6 +1220,7 @@ void MainWindow::loadMassFromCSV()
                             {
                                 masslib.append(m);
                                 addMarker(mass,false,false,m);
+                                addIsotopesToMarker(addMarker(mass,false,false,m));
 
                             } else {
                                 delete m;
@@ -1377,6 +1600,11 @@ void massMarker::setMass(double mass)
     m_mass = mass;
 }
 
+void massMarker::updateMass()
+{
+    m_mass = m_plotMarker->point1->coords().x();
+}
+
 molecule_t *massMarker::molecule()
 {
     return m_molecule;
@@ -1419,7 +1647,7 @@ void fitter_t::setData(QVector<double> peakshape, QVector<double> peakshapeXAxis
     }
 }
 
-QVector<double> fitter_t::generateSinglePeak(double mass, const QVector<double>* massAxis)
+QVector<double> fitter_t::generateSinglePeak(double mass, const QVector<double>* massAxis, double coefficient)
 {
     double localResolution = interpolateMap(mass,&m_resolution);
     QVector<double> values;
@@ -1431,9 +1659,36 @@ QVector<double> fitter_t::generateSinglePeak(double mass, const QVector<double>*
             val=0;
         else
             val=m_peakshape.lowerBound(peakshapeLookupIndex).value();
-        values.append(val);
+        values.append(val*coefficient);
     }
     return values;
+}
+
+QVector<double> fitter_t::addVectors(const QVector<double> a, const QVector<double> b)
+{
+    QVector<double> result;
+    if (a.length() == b.length())
+    {
+        for (int i=0;i<a.length();i++)
+        {
+            result.append(a.at(i)+b.at(i));
+        }
+    }
+    return result;
+}
+
+QVector<double> fitter_t::substractVectors(const QVector<double> a, const QVector<double> b)
+{
+    QVector<double> result;
+    if (a.length() == b.length())
+    {
+        for (int i=0;i<a.length();i++)
+        {
+            result.append(a.at(i)-b.at(i));
+        }
+    }
+    return result;
+
 }
 
 double fitter_t::interpolateMap(double key, QMap<double, double> *map)
@@ -1457,11 +1712,25 @@ double fitter_t::interpolateMap(double key, QMap<double, double> *map)
 
 
 
-QVector<double> fitter_t::fit(QVector<double> massAxis, QVector<double> values, QVector<double> masslist)
+fitterResult_t fitter_t::fit(QVector<double> massAxis, QVector<double> spectrumValues, QVector<double> masslist, QVector<double> fixedMasses, QVector<double> fixedMassesCoeffs)
 {
-    if (massAxis.count() > 2 && values.count() == massAxis.count() && masslist.count() > 0)
+    fitterResult_t ret;
+    // prepare vector of fixed Peaks
+    QVector<double> fixedPartOfSpectrum;
+    fixedPartOfSpectrum.resize(spectrumValues.length());
+    fixedPartOfSpectrum.fill(0);
+
+    if (massAxis.count() > 2 && spectrumValues.count() == massAxis.count() && !fixedMasses.isEmpty() && !fixedMassesCoeffs.isEmpty() && fixedMasses.count() == fixedMassesCoeffs.count() && fixedMasses.count() > 0)
     {
-        QVector<double> ret;
+        fixedPartOfSpectrum = generateSinglePeak(fixedMasses.at(0),&massAxis,fixedMassesCoeffs.at(0));
+        for (int i=1;i<fixedMasses.count();i++)
+        {
+            fixedPartOfSpectrum = addVectors(fixedPartOfSpectrum,generateSinglePeak(fixedMasses.at(i),&massAxis,fixedMassesCoeffs.at(i)));
+        }
+    }
+    spectrumValues = substractVectors(spectrumValues,fixedPartOfSpectrum);
+    if (massAxis.count() > 2 && spectrumValues.count() == massAxis.count() && masslist.count() > 0)
+    {
         qDebug() << "fitter.fit() called";
         //    // Solve Ax=b for x
         //    MatrixXd A = MatrixXd::Random(values.count(),masslist.count());
@@ -1470,35 +1739,36 @@ QVector<double> fitter_t::fit(QVector<double> massAxis, QVector<double> values, 
         //    MatrixXd x = A.householderQr().solve(b);
         //        std::cout << x << "\n\n";
 
-        MatrixXd A(values.count(),masslist.count());
+        MatrixXd A(spectrumValues.count(),masslist.count());
         for (int j=0;j<masslist.count();j++)
         {
             QVector<double> singlePeak = generateSinglePeak(masslist.at(j),&massAxis);
-            for (int i=0; i<values.count();i++)
+            for (int i=0; i<spectrumValues.count();i++)
             {
                 A(i,j) = singlePeak.at(i);
             }
         }
-        MatrixXd b(values.count(),1);
+        MatrixXd b(spectrumValues.count(),1);
 
-        for(int i=0; i< values.count(); i++)
+        for(int i=0; i< spectrumValues.count(); i++)
         {
-            b(i,0) = values.at(i);
+            b(i,0) = spectrumValues.at(i);
         }
 
         MatrixXd x = A.householderQr().solve(b);
         MatrixXd c = A*x;
-        for(int i=0;i<values.count(); i++)
+        for(int i=0;i<spectrumValues.count(); i++)
         {
-            ret.append(c(i,0));
+            ret.fittedSpectrum.append(c(i,0));
         }
-        return ret;
-    } else
-    {
-        return QVector<double>();
+        for(int i=0;i<masslist.count(); i++)
+        {
+            ret.massCoefficients.append(x(i));
+        }
+        ret.fittedSpectrum = addVectors(ret.fittedSpectrum,fixedPartOfSpectrum);
     }
+    return ret;
 }
-
 
 myQCP::myQCP(QWidget *parent) : QCustomPlot(parent)
 {
@@ -1508,6 +1778,70 @@ myQCP::myQCP(QWidget *parent) : QCustomPlot(parent)
 myQCP::~myQCP()
 {
 
+}
+
+QCPRange myQCP::getVisibleValueRange(QCPGraph *graph)
+{
+    // ############################### STILL BUGGY AND SLOW ########################
+    if (graph != NULL && graph->data()->count() > 0)
+    {
+        QCPDataMap* data = graph->data();
+        QCPRange rng = graph->keyAxis()->range();
+        QCPDataMap::iterator it, itUp;
+        if (rng.lower < data->first().key)
+            it = data->begin();
+        else
+            it = data->lowerBound(rng.lower);
+
+        if (rng.upper > data->last().key)
+            itUp = data->end();
+        else
+            itUp = data->lowerBound(rng.upper);
+
+        double min = 1e10;
+        double max = 1e-10;
+        while (it++ != itUp) {
+            if (it.value().value > max)
+                max=it.value().value;
+            if (it.value().value < min && it.value().value>1e-6)
+                min=it.value().value;
+        }
+        qDebug() << "Rescale Range: Lower: " << min << " Upper: " << max;
+        return  QCPRange(min,max);
+    }
+    return QCPRange(0,0);
+}
+
+
+QCPRange myQCP::rescaleToLargestVisibleValueRange()
+{
+    double globalMin = 1e10;
+    double globalMax = -1e10;
+    for (int i = 0; i<graphCount()-1;i++)
+    {
+        QCPRange rng = getVisibleValueRange(graph(i));
+        if (rng.lower<globalMin)
+            globalMin = rng.lower;
+        if (rng.upper>globalMax)
+            globalMax = rng.upper;
+    }
+    //QCPRange rng = getVisibleValueRange(totalSumSpectrum);
+    yAxis->setRange(QCPRange(globalMin/1.1,globalMax*1.1).sanitizedForLogScale());
+    replot();
+    return QCPRange(globalMin,globalMax);
+}
+
+void myQCP::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::RightButton)
+    {
+        // Rightclick mass hopping shortcut
+        QCPRange oldrange = xAxis->range();
+        xAxis->setRange(oldrange.center() + 1,oldrange.size(),Qt::AlignCenter);
+        rescaleToLargestVisibleValueRange();
+        emit xAxis->rangeChanged(xAxis->range(), oldrange);
+    }
+    QCustomPlot::mouseReleaseEvent(event); // Call the Base class implementation of event, otherwhise its totally overwritten
 }
 
 void myQCP::keyPressEvent(QKeyEvent * event)
@@ -1521,10 +1855,39 @@ void myQCP::keyPressEvent(QKeyEvent * event)
             QCPItemStraightLine* item = ((QCPItemStraightLine*)selectedItems().at(0));
             double removeposition = item->point1->coords().x();
             removeItem(item);
-            replot();
             emit markerRemoved(removeposition);
         }
     }
+    if (event->key() == Qt::Key_Direction_R || event->key() == Qt::Key_D || event->key() == Qt::Key_Space)
+    {
+        QCPRange oldrange = xAxis->range();
+        xAxis->setRange(oldrange.center() + 1,oldrange.size(),Qt::AlignCenter);
+        rescaleToLargestVisibleValueRange();
+        emit xAxis->rangeChanged(xAxis->range(), oldrange);
+    }
+    if (event->key() == Qt::Key_Direction_L || event->key() == Qt::Key_A)
+    {
+        QCPRange oldrange = xAxis->range();
+        xAxis->setRange(oldrange.center() - 1,oldrange.size(),Qt::AlignCenter);
+        rescaleToLargestVisibleValueRange();
+        emit xAxis->rangeChanged(xAxis->range(), oldrange);
+    }
+    if (event->key() == Qt::Key_Down || event->key() == Qt::Key_S)
+    {
+        QCPRange oldrange = xAxis->range();
+        xAxis->setRange(oldrange.center(),5 ,Qt::AlignCenter);
+        rescaleToLargestVisibleValueRange();
+        emit xAxis->rangeChanged(xAxis->range(), oldrange);
+    }
+    if (event->key() == Qt::Key_Up || event->key() == Qt::Key_W)
+    {
+        QCPRange oldrange = xAxis->range();
+        xAxis->setRange(oldrange.center(), 0.5 ,Qt::AlignCenter);
+        rescaleToLargestVisibleValueRange();
+        emit xAxis->rangeChanged(xAxis->range(), oldrange);
+    }
+    replot();
+
 }
 
 void MainWindow::saveToH5()
@@ -1671,11 +2034,11 @@ void MainWindow::saveToCSV()
         if (csvFile.open(QFile::WriteOnly))
         {
             QTextStream stream(&csvFile);
-//            QVector<double> masses = markersMap.keys().toVector();
-//            for (int i=0;i<masses.count();i++)
-//            {
-//                stream << QString::number(masses.at(i),'g',8) << "\n";
-//            }
+            //            QVector<double> masses = markersMap.keys().toVector();
+            //            for (int i=0;i<masses.count();i++)
+            //            {
+            //                stream << QString::number(masses.at(i),'g',8) << "\n";
+            //            }
 
             // ###################### Elements ######################################
 
@@ -1687,9 +2050,9 @@ void MainWindow::saveToCSV()
             {
 
                 headerline.append(it.value()->name());
-                if (it.value()->isotope() != NULL)
+                if (it.value()->isotopeOf() != NULL)
                 {
-                    isotopeline.append(it.value()->isotope()->name());
+                    isotopeline.append(it.value()->isotopeOf()->name());
                 }
 
                 massline.append(QString::number(it.value()->mass(),'g',10));
@@ -1773,7 +2136,7 @@ void MainWindow::clearMasslist()
 
 
 void MainWindow::hdf5WriteStrings(H5::H5File file, const std::string& data_set_name,
-                const std::vector<std::string>& strings )
+                                  const std::vector<std::string>& strings )
 {
     //H5::Exception::dontPrint();
 
@@ -1798,12 +2161,12 @@ void MainWindow::hdf5WriteStrings(H5::H5File file, const std::string& data_set_n
     }
     catch (H5::Exception& err)
     {
-       err.printError();
+        err.printError();
     }
 }
 
 void MainWindow::hdf5WriteMatrixInt(H5::H5File file, const std::string& data_set_name,
-                const std::vector<int>* data, int dimX, int dimY)
+                                    const std::vector<int>* data, int dimX, int dimY)
 {
     qDebug() << "Writing " << dimX << " mass compositions of " << dimY << " elements to HDF5";
     if (data->size() > 0)

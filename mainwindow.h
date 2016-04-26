@@ -48,12 +48,15 @@ public:
 class myQCP : public QCustomPlot
 {
     Q_OBJECT
+    QCPRange getVisibleValueRange(QCPGraph *graph);
 public:
     explicit myQCP(QWidget *parent = 0);
     virtual ~myQCP();
     // QWidget interface
 
+    QCPRange rescaleToLargestVisibleValueRange();
 protected:
+    void mouseReleaseEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
 signals:
     void markerRemoved(double position);
@@ -78,11 +81,21 @@ public:
     QCPItemStraightLine *plotMarker() const;
     void setMarker(QCPItemStraightLine *plotMarker);
     double mass() const;
+    double lastFitCoeff;
     void setMass(double mass);
+    void updateMass();
     molecule_t* molecule();
+    QList<massMarker*> linkedIsotopes;
+    massMarker* isotopeParent;
 };
 
 
+class fitterResult_t {
+public:
+    QVector<double> fittedSpectrum;
+    QVector<double> massCoefficients;
+    double selectedMassCoefficient;
+};
 
 class fitter_t : public QObject
 {
@@ -96,12 +109,14 @@ private:
     QMap<double,double> m_resolution;
     QVector<double> m_massList;
     QVector<double> m_dataToFit;
-    QVector<double> generateSinglePeak(double mass, const QVector<double> *massAxis);
+    QVector<double> generateSinglePeak(double mass, const QVector<double> *massAxis, double coefficient=1.0);
+    QVector<double> addVectors(const QVector<double> a, const QVector<double> b);
+    QVector<double> substractVectors(const QVector<double> a, const QVector<double> b);
     double interpolateMap(double key, QMap<double,double>* map);
 
 public:
     void setData(QVector<double> peakshape, QVector<double> peakshapeXAxis, QVector<double> resolution, QVector<double> resolutionXAxis);
-    QVector<double> fit(QVector<double> massAxis, QVector<double> values, QVector<double> masslist);
+    fitterResult_t fit(QVector<double> massAxis, QVector<double> values, QVector<double> masslist, QVector<double> fixedMasses=QVector<double>(), QVector<double> fixedMassesCoeffs=QVector<double>());
 };
 
 class MainWindow : public QMainWindow
@@ -125,21 +140,26 @@ private:
     QCPGraph* spectrumToFitTo;
     QCPGraph* fittedSpectrum;
     QCPGraph* subspectraGraph;
-    QCPItemStraightLine* draggedItem;
+    //QCPItemStraightLine* draggedItem;
+    massMarker* draggedMarker; // replaces draggedItem
     QList<QCPAbstractItem*> massHints;
     QList<double> massHintPositions;
     QPen hintPen;
     QPen identifiedPen;
+    QPen autoPen;
     QPen unidentifiedPen;
 
     markersMap_t markersMap;
+    markersMap_t isotopeMarkersMap;
+
     massLibrary masslib;
 
     //QList<QCPGraph*> subSpectraGraphs;
     QCPDataMap* currentWorkingSpectrum;
     QCPDataMap peakshape;
     void initializeGraphs(void);
-    void addMarker(double x, bool sort=true, bool convertFromPixel=false, molecule_t *molecule = NULL);
+    massMarker *addMarker(double x, bool sort=true, bool convertFromPixel=false, molecule_t *molecule = NULL, massMarker *isotopeParent=NULL);
+    QList<massMarker*> addIsotopesToMarker(massMarker* marker);
     void setMarkersVisible(bool visibility);
     H5File* spectrumFile;
     QVector<double> get1DSliceFromH5(QString datasetName, int start=0, int end=-1);
@@ -157,12 +177,12 @@ private:
 
     int getSecondDimCountFromH5(QString datasetName);
     int getSumSpecCountFromH5();
-    QCPRange getVisibleValueRange(QCPGraph* graph);
-    QCPRange rescaleToLargestVisibleValueRange();
+    //QCPRange getVisibleValueRange(QCPGraph* graph);
+    //QCPRange rescaleToLargestVisibleValueRange();
     void reloadSubSpectrum();
     int getIndexOfValueInSortedVector(const QVector<double> *vec, double val);
 
-    void fitPrepareAndCall(QCPRange range);
+    double fitPrepareAndCall(QCPRange range);
     double closestMarkerPosition(double x);
     QVector<double> addVectors(const QVector<double> firstVector,const QVector<double> secondVector);
     QVector<double> substractVectors(const QVector<double> firstVector,const QVector<double> secondVector);
@@ -178,7 +198,8 @@ private slots:
     void plotXRangeChanged(QCPRange newRange, QCPRange oldRange);
     void sliderMoved(int i);
     void massListClicked(QListWidgetItem* currentItem);
-    void markerRemoved(double position);
+    void removeMarker(double position);
+    void removeIsotopeMarker(double position);
     void loadSpectrum();
     void loadMassFromCSV();
     void saveToH5();
