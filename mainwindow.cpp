@@ -183,12 +183,12 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
 
-//    qDebug() << "Masses: " << masslib.count();
-//    qDebug() << "Elements:";
-//    for (elementLibrary_t::const_iterator it = masslib.elements().constBegin(); it != masslib.elements().constEnd(); it++)
-//    {
-//        qDebug() << it.value()->name() << ": " << it.value()->mass();
-//    }
+    //    qDebug() << "Masses: " << masslib.count();
+    //    qDebug() << "Elements:";
+    //    for (elementLibrary_t::const_iterator it = masslib.elements().constBegin(); it != masslib.elements().constEnd(); it++)
+    //    {
+    //        qDebug() << it.value()->name() << ": " << it.value()->mass();
+    //    }
     spectrumFile = NULL;
     ui->setupUi(this);
     ui->plot->setInteraction(QCP::iSelectItems,true);
@@ -199,6 +199,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->plot->setInteraction(QCP::iRangeZoom,true);
     ui->plot->axisRect()->setRangeZoomAxes(ui->plot->xAxis,NULL);
     ui->plot->xAxis->setAutoTickStep(false);
+    ui->plot->xAxis->grid()->setVisible(false);
 
     connect(ui->plot, SIGNAL(mouseDoubleClick(QMouseEvent*)), this, SLOT(plotDoubleClicked(QMouseEvent*)));
     connect(ui->plot, SIGNAL(mousePress(QMouseEvent*)),this,SLOT(plotDragStart(QMouseEvent*)));
@@ -297,16 +298,16 @@ massMarker* MainWindow::addMarker(double x, bool sort, bool convertFromPixel, mo
         }
         else
         {
-        marker = markersMap.find(x).value();
-        return marker;
+            marker = markersMap.find(x).value();
+            return marker;
         }
     }
 
     if (isotopeMarkersMap.contains(x))
     {
-            // if it's in isotope list, it is an isotope --> no overwriting.
-            marker = isotopeMarkersMap.find(x).value();
-            return marker;
+        // if it's in isotope list, it is an isotope --> no overwriting.
+        marker = isotopeMarkersMap.find(x).value();
+        return marker;
     }
 
     QCPItemStraightLine* lineMarker = new QCPItemStraightLine(ui->plot);
@@ -669,35 +670,35 @@ void MainWindow::plotXRangeChanged(QCPRange newRange, QCPRange oldRange)
             massHintPositions.append(it.value()->mass());
         }
         ui->plot->replot();
-//        if (hintsEnabled == false)
-//        {
-//            for (massLibrary::iterator it = masslib.lowerBound(newRange.lower); it != masslib.lowerBound(newRange.upper);it++)
-//            {
-//                QCPItemStraightLine* line = new QCPItemStraightLine(ui->plot);
-//                line->setSelectable(false);
-//                line->setPen(hintPen);
-//                line->point1->setCoords(it.value()->mass(),1e-6);
-//                line->point2->setCoords(it.value()->mass(),1e6);
+        //        if (hintsEnabled == false)
+        //        {
+        //            for (massLibrary::iterator it = masslib.lowerBound(newRange.lower); it != masslib.lowerBound(newRange.upper);it++)
+        //            {
+        //                QCPItemStraightLine* line = new QCPItemStraightLine(ui->plot);
+        //                line->setSelectable(false);
+        //                line->setPen(hintPen);
+        //                line->point1->setCoords(it.value()->mass(),1e-6);
+        //                line->point2->setCoords(it.value()->mass(),1e6);
 
 
-//                QCPItemText* text = new QCPItemText(ui->plot);
-//                text->setSelectable(false);
-//                text->setPen(Qt::NoPen);
-//                text->setText(it.value()->name());
-//                text->setRotation(270);
-//                text->setPositionAlignment(Qt::AlignRight);
-//                text->position->setCoords(it.value()->mass(),ui->plot->yAxis->range().upper);
+        //                QCPItemText* text = new QCPItemText(ui->plot);
+        //                text->setSelectable(false);
+        //                text->setPen(Qt::NoPen);
+        //                text->setText(it.value()->name());
+        //                text->setRotation(270);
+        //                text->setPositionAlignment(Qt::AlignRight);
+        //                text->position->setCoords(it.value()->mass(),ui->plot->yAxis->range().upper);
 
-//                ui->plot->addItem(text);
-//                ui->plot->addItem(line);
+        //                ui->plot->addItem(text);
+        //                ui->plot->addItem(line);
 
-//                massHints.append(text);
-//                massHints.append(line);
-//                massHintPositions.append(it.value()->mass());
-//            }
-//            hintsEnabled = true;
-//            ui->plot->replot();
-//        }
+        //                massHints.append(text);
+        //                massHints.append(line);
+        //                massHintPositions.append(it.value()->mass());
+        //            }
+        //            hintsEnabled = true;
+        //            ui->plot->replot();
+        //        }
     }
     else
     {
@@ -708,16 +709,16 @@ void MainWindow::plotXRangeChanged(QCPRange newRange, QCPRange oldRange)
         }
         massHints.clear();
         massHintPositions.clear();
-//        if (hintsEnabled == true)
-//        {
-//            for (int i=0;i<massHints.count();i++)
-//            {
-//                ui->plot->removeItem(massHints.at(i));
-//            }
-//            massHints.clear();
-//            massHintPositions.clear();
-//            hintsEnabled = false;
-//        }
+        //        if (hintsEnabled == true)
+        //        {
+        //            for (int i=0;i<massHints.count();i++)
+        //            {
+        //                ui->plot->removeItem(massHints.at(i));
+        //            }
+        //            massHints.clear();
+        //            massHintPositions.clear();
+        //            hintsEnabled = false;
+        //        }
         ui->plot->replot();
     }
 
@@ -1013,75 +1014,80 @@ void MainWindow::loadSpectrum()
         maxSumSpectrum->setData(massAxis,substractVectors(dat2,baseline));
 
 
-        // #################### Load preliminary masslist ######################
-        clearMasslist();
+        try {
+            // #################### Load preliminary masslist ######################
+            clearMasslist();
 
-        QVector<double> masses = get1DSliceFromH5("MassList");
+            QVector<double> masses = get1DSliceFromH5("MassList");
 
 
-        QVector<QString> elementNamesInFile;
-        elementNamesInFile.append("C");
-        elementNamesInFile.append("C(13)");
-        elementNamesInFile.append("H");
-        elementNamesInFile.append("H+");
-        elementNamesInFile.append("N");
-        elementNamesInFile.append("O");
-        elementNamesInFile.append("S");
+            QVector<QString> elementNamesInFile;
+            elementNamesInFile.append("C");
+            elementNamesInFile.append("C(13)");
+            elementNamesInFile.append("H");
+            elementNamesInFile.append("H+");
+            elementNamesInFile.append("N");
+            elementNamesInFile.append("O");
+            elementNamesInFile.append("S");
 
-        QVector<element*> elementsInFile;
+            QVector<element*> elementsInFile;
 
-        for (int i=0;i<elementNamesInFile.count();i++)
-        {
-            if (masslib.elements().contains(elementNamesInFile.at(i)))
+            for (int i=0;i<elementNamesInFile.count();i++)
             {
-                elementsInFile.append(masslib.elements().find(elementNamesInFile.at(i)).value());
-            } else {
-                // need to create new element !
-                qDebug() << "Add new element on demand - Not implemented yet!";
-            }
-        }
-
-        bool compositionsFoundInFile = H5Lexists(spectrumFile->getId(), "ElementalCompositions", H5P_DEFAULT);
-
-        for (int i=0;i<masses.count();i++)
-        {
-            molecule_t* closeMolecule = masslib.findClosestMolecule(masses.at(i));
-            if ((qAbs(masses.at(i) - closeMolecule->mass()) < 0.002))
-            {
-                //qDebug() << "Found very close mass in lib --> snapping " << QString::number(masses.at(i)) << " to " << QString::number(closeMolecule->mass()) << " (" << closeMolecule->name() << ")";
-                massMarker* marker = addMarker(closeMolecule->mass(),false,false,closeMolecule);
-                addIsotopesToMarker(marker);
-
-            } else {
-                if (compositionsFoundInFile )
+                if (masslib.elements().contains(elementNamesInFile.at(i)))
                 {
-                    QVector<int> compositionCoefs = get2DIntSliceFromH5("ElementalCompositions",i);
-                    molecule_t* m = new molecule_t();
-                    for (int i=0;i<elementsInFile.count();i++)
-                    {
-                        m->addElement(elementsInFile.at(i),compositionCoefs.at(i));
-                    }
-                    if (!masslib.contains(m->mass()))
-                    {
-                        masslib.append(m);
-                        massMarker* marker = addMarker(masses.at(i),false,false,m);
-                        addIsotopesToMarker(marker);
+                    elementsInFile.append(masslib.elements().find(elementNamesInFile.at(i)).value());
+                } else {
+                    // need to create new element !
+                    qDebug() << "Add new element on demand - Not implemented yet!";
+                }
+            }
 
-                    } else {
-                        delete m;
+            bool compositionsFoundInFile = H5Lexists(spectrumFile->getId(), "ElementalCompositions", H5P_DEFAULT);
+
+            for (int i=0;i<masses.count();i++)
+            {
+                molecule_t* closeMolecule = masslib.findClosestMolecule(masses.at(i));
+                if ((qAbs(masses.at(i) - closeMolecule->mass()) < 0.002))
+                {
+                    //qDebug() << "Found very close mass in lib --> snapping " << QString::number(masses.at(i)) << " to " << QString::number(closeMolecule->mass()) << " (" << closeMolecule->name() << ")";
+                    massMarker* marker = addMarker(closeMolecule->mass(),false,false,closeMolecule);
+                    addIsotopesToMarker(marker);
+
+                } else {
+                    if (compositionsFoundInFile )
+                    {
+                        QVector<int> compositionCoefs = get2DIntSliceFromH5("ElementalCompositions",i);
+                        molecule_t* m = new molecule_t();
+                        for (int i=0;i<elementsInFile.count();i++)
+                        {
+                            m->addElement(elementsInFile.at(i),compositionCoefs.at(i));
+                        }
+                        if (!masslib.contains(m->mass()))
+                        {
+                            masslib.append(m);
+                            massMarker* marker = addMarker(masses.at(i),false,false,m);
+                            addIsotopesToMarker(marker);
+
+                        } else {
+                            delete m;
+                            addMarker(masses.at(i),false,false);
+                        }
+                    }
+                    else // just add unknown marker if no compositions found and no close match
+                    {
                         addMarker(masses.at(i),false,false);
                     }
                 }
-                else // just add unknown marker if no compositions found and no close match
-                {
-                    addMarker(masses.at(i),false,false);
-                }
             }
+
+            qDebug() << "Elements in masslib after file loaded: " <<  masslib.elements().count();
+            qDebug() << "Masses in masslib after file loaded: " <<  masslib.count();
         }
-
-        qDebug() << "Elements in masslib after file loaded: " <<  masslib.elements().count();
-        qDebug() << "Masses in masslib after file loaded: " <<  masslib.count();
-
+        catch (...)
+        {
+            qDebug() << "Error loading Compositions from HDF5";
+        }
 
         // #################### Get Sub Spectra #######################
         int NbrSpecs = getSumSpecCountFromH5();
@@ -1092,28 +1098,40 @@ void MainWindow::loadSpectrum()
 
         // #################### Get Peakshape  #########################
 
-        QVector<double> peakshapeAxis = getPeakShapeMassAxisFromH5();
-        QVector<double> peakshapeVals = getPeakShapeValuesFromH5();
-        peakshape.clear();
-        if (peakshapeAxis.count() == peakshapeVals.count())
+        bool massDepPeakshapeFoundInFile = H5Lexists(spectrumFile->getId(), "MassDepPeakshape", H5P_DEFAULT);
+
+        if (massDepPeakshapeFoundInFile)
         {
-            for (int i=0;i<peakshapeAxis.count();i++)
-            {
-                peakshape.insert(peakshapeAxis.at(i),QCPData(peakshapeAxis.at(i),peakshapeVals.at(i)));
-            }
+            // #################### Get New Style Peakshape  ###############
+            QMap<double, QVector<double> > mdPs = getMassDepPeakshapeFromH5();
+            fitter.setData(mdPs);
         }
-        ui->peakshapePlot->graph(0)->clearData();
-        ui->peakshapePlot->graph(0)->setData(&peakshape,true);
-        ui->peakshapePlot->rescaleAxes(false);
-        ui->peakshapePlot->replot();
+        else
+        {
+            // #################### Get Old Style Peakshape  ###############
+            QVector<double> peakshapeAxis = getPeakShapeMassAxisFromH5();
+            QVector<double> peakshapeVals = getPeakShapeValuesFromH5();
+            peakshape.clear();
+            if (peakshapeAxis.count() == peakshapeVals.count())
+            {
+                for (int i=0;i<peakshapeAxis.count();i++)
+                {
+                    peakshape.insert(peakshapeAxis.at(i),QCPData(peakshapeAxis.at(i),peakshapeVals.at(i)));
+                }
+            }
+            ui->peakshapePlot->graph(0)->clearData();
+            ui->peakshapePlot->graph(0)->setData(&peakshape,true);
+            ui->peakshapePlot->rescaleAxes(false);
+            ui->peakshapePlot->replot();
 
-        ui->plot->rescaleAxes(false);
-        ui->plot->replot();
+            ui->plot->rescaleAxes(false);
+            ui->plot->replot();
+            // #################### Get Resolution vs Mass #################
+            QVector<double> resolutionAxis = getResolutionAxisFromH5();
+            QVector<double> resolution = getResolutionFromH5();
+            fitter.setData(peakshapeVals,peakshapeAxis,resolution,resolutionAxis);
 
-        // #################### Get Resolution vs Mass #################
-        QVector<double> resolutionAxis = getResolutionAxisFromH5();
-        QVector<double> resolution = getResolutionFromH5();
-        fitter.setData(peakshapeVals,peakshapeAxis,resolution,resolutionAxis);
+        }
         ui->actionSave_Masses_To_HDF5->setEnabled(true);
         ui->actionSave_Masslist_to_CSV->setEnabled(true);
         ui->actionLoad_Masslist_from_CSV->setEnabled(true);
@@ -1273,6 +1291,21 @@ QVector<double> MainWindow::getResolutionAxisFromH5()
         resolution.replace(i,i); // Resolution is stored 1 Value per AMU
     }
     return resolution;
+}
+
+QMap<double, QVector<double> > MainWindow::getMassDepPeakshapeFromH5()
+{
+    QVector<double> centerMasses = get1DSliceFromH5("MassDepPeakshapeCenterMasses");
+    QMap<double, QVector<double> > mdPs;
+    int psCount = getSecondDimCountFromH5("MassDepPeakshape");
+    if (psCount == centerMasses.length())
+    {
+        for (int i=0;i<psCount;i++)
+        {
+            mdPs.insert(centerMasses[i],get2DSliceFromH5("MassDepPeakshape",i));
+        }
+    }
+    return mdPs;
 }
 
 QVector<double> MainWindow::getPeakShapeValuesFromH5()
@@ -1647,21 +1680,97 @@ void fitter_t::setData(QVector<double> peakshape, QVector<double> peakshapeXAxis
     }
 }
 
+void fitter_t::setData(QMap<double, QVector<double> > massDepPeakshape)
+{
+    m_massDepPeakshape = massDepPeakshape;
+    peakshapeMode = 1;
+}
+
 QVector<double> fitter_t::generateSinglePeak(double mass, const QVector<double>* massAxis, double coefficient)
 {
-    double localResolution = interpolateMap(mass,&m_resolution);
     QVector<double> values;
-    for (int i=0; i<massAxis->count();i++)
-    {
-        double val=0;
-        double peakshapeLookupIndex = (massAxis->at(i)-mass)*localResolution/mass;
-        if (peakshapeLookupIndex < m_peakshape.firstKey() || peakshapeLookupIndex > m_peakshape.lastKey())
-            val=0;
-        else
-            val=m_peakshape.lowerBound(peakshapeLookupIndex).value();
-        values.append(val*coefficient);
+    if (peakshapeMode == 0)
+        {
+        double localResolution = interpolateMap(mass,&m_resolution);
+        for (int i=0; i<massAxis->count();i++)
+        {
+            double val=0;
+            double peakshapeLookupIndex = (massAxis->at(i)-mass)*localResolution/mass;
+            if (peakshapeLookupIndex < m_peakshape.firstKey() || peakshapeLookupIndex > m_peakshape.lastKey())
+                val=0;
+            else
+            {
+                //val=m_peakshape.lowerBound(peakshapeLookupIndex).value();
+                QMap<double,double>::iterator low = m_peakshape.lowerBound(peakshapeLookupIndex);
+                QMap<double,double>::iterator high = m_peakshape.lowerBound(peakshapeLookupIndex);
+                high++;
+
+                if (low == high)
+                    val = low.value();
+                else
+                {
+                    double dx = peakshapeLookupIndex - low.key();
+                    double d = high.key() - low.key();
+                    double fact = dx/d;
+                    val =  high.value() * fact + low.value() * (1-fact);
+                }
+            }
+            values.append(val*coefficient);
+        }
+        return values;
     }
-    return values;
+    else if (peakshapeMode == 1)
+    {
+        QVector<double> interpolPeakShape;
+        if (mass < m_massDepPeakshape.firstKey())
+        {
+            interpolPeakShape = m_massDepPeakshape.first();
+        }
+        else if (mass > m_massDepPeakshape.lastKey())
+        {
+            interpolPeakShape = m_massDepPeakshape.last();
+        }
+        else
+        {
+            QMap<double,QVector<double> >::iterator low = m_massDepPeakshape.lowerBound(mass);
+            QMap<double,QVector<double> >::iterator high = m_massDepPeakshape.lowerBound(mass);
+            low--;
+            double dx = mass - low.key();
+            double d = high.key() - low.key();
+            double fact = dx/d;
+            for(int i=0; i<low.value().length();i++)
+            {
+               interpolPeakShape.append( high.value()[i]*fact + low.value()[i]*(1-fact));
+            }
+        }
+        int centerIndex = massAxis->length()-1;
+        for (int i=0; i<massAxis->length(); i++)
+        {
+            if (massAxis->at(i) > mass)
+            {
+                if (i>0)
+                    centerIndex = i-1;
+                else
+                    centerIndex = 0;
+                break;
+            }
+        }
+        double centerMassDx = mass - massAxis->at(centerIndex);
+        double centerMassD = (massAxis->at(centerIndex+1) - massAxis->at(centerIndex));
+        double centerIndexDx =  centerMassDx/ centerMassD;
+
+        for (int i=0; i<massAxis->length();i++)
+        {
+            double val = 0;
+            int indexInPs = i-centerIndex + (interpolPeakShape.length()-1)/2 - 1;
+            if ((indexInPs > 0) && ((indexInPs + 1) < interpolPeakShape.length()))
+            {
+                val = interpolPeakShape[indexInPs+1]*(1-centerIndexDx) + interpolPeakShape[indexInPs]*centerIndexDx;
+            }
+            values.append(val*coefficient);
+        }
+        return values;
+    }
 }
 
 QVector<double> fitter_t::addVectors(const QVector<double> a, const QVector<double> b)
@@ -1697,11 +1806,18 @@ double fitter_t::interpolateMap(double key, QMap<double, double> *map)
         return map->first();
     if (key > map->lastKey())
         return map->last();
+    /*
     QMap<double,double>::iterator high = map->begin();
     while(high.key()<key && high != map->end())
         high++;
     QMap<double,double>::iterator low = high;
     low--;
+    */
+    QMap<double,double>::iterator low = map->lowerBound(key);
+    QMap<double,double>::iterator high = map->upperBound(key);
+
+    if (low==high)
+        return low.value();
     qDebug() << "Low:  " << low.key() ;
     qDebug() << "High: " << high.key();
     double distance = high.key() -low.key();
@@ -1731,7 +1847,7 @@ fitterResult_t fitter_t::fit(QVector<double> massAxis, QVector<double> spectrumV
     spectrumValues = substractVectors(spectrumValues,fixedPartOfSpectrum);
     if (massAxis.count() > 2 && spectrumValues.count() == massAxis.count() && masslist.count() > 0)
     {
-        qDebug() << "fitter.fit() called";
+        //qDebug() << "fitter.fit() called";
         //    // Solve Ax=b for x
         //    MatrixXd A = MatrixXd::Random(values.count(),masslist.count());
         //    MatrixXd b = MatrixXd::Random(values.count(),1);
@@ -1817,15 +1933,19 @@ QCPRange myQCP::rescaleToLargestVisibleValueRange()
 {
     double globalMin = 1e10;
     double globalMax = -1e10;
-    for (int i = 0; i<graphCount()-1;i++)
-    {
-        QCPRange rng = getVisibleValueRange(graph(i));
-        if (rng.lower<globalMin)
-            globalMin = rng.lower;
-        if (rng.upper>globalMax)
-            globalMax = rng.upper;
-    }
-    //QCPRange rng = getVisibleValueRange(totalSumSpectrum);
+    //    for (int i = 0; i<graphCount()-1;i++)
+    //    {
+    //        QCPRange rng = getVisibleValueRange(graph(i));
+    //        if (rng.lower<globalMin)
+    //            globalMin = rng.lower;
+    //        if (rng.upper>globalMax)
+    //            globalMax = rng.upper;
+    //    }
+    QCPRange rng = getVisibleValueRange(graph(2));
+    globalMax = rng.upper;
+
+    rng = getVisibleValueRange(graph(0));
+    globalMin = rng.lower;
     yAxis->setRange(QCPRange(globalMin/1.1,globalMax*1.1).sanitizedForLogScale());
     replot();
     return QCPRange(globalMin,globalMax);

@@ -38,6 +38,8 @@ win32:LIBS += \
     -lhdf5_hl_cpp-static \
     -lhdf5_tools-static
 
+win32:QMAKE_LFLAGS += -static-libgcc -static-libstdc++ -static # statically link libGCC, STDlib, winpthread, ...
+
 win32 {
     DEPLOY_COMMAND = windeployqt # collects dll dependencies
 

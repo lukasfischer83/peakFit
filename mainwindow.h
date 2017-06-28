@@ -105,8 +105,10 @@ public:
     ~fitter_t();
 
 private:
+    int peakshapeMode = 0;
     QMap<double,double> m_peakshape;
     QMap<double,double> m_resolution;
+    QMap<double,QVector<double> > m_massDepPeakshape;
     QVector<double> m_massList;
     QVector<double> m_dataToFit;
     QVector<double> generateSinglePeak(double mass, const QVector<double> *massAxis, double coefficient=1.0);
@@ -116,6 +118,7 @@ private:
 
 public:
     void setData(QVector<double> peakshape, QVector<double> peakshapeXAxis, QVector<double> resolution, QVector<double> resolutionXAxis);
+    void setData(QMap<double,QVector<double> > massDepPeakshape);
     fitterResult_t fit(QVector<double> massAxis, QVector<double> values, QVector<double> masslist, QVector<double> fixedMasses=QVector<double>(), QVector<double> fixedMassesCoeffs=QVector<double>());
 };
 
@@ -173,7 +176,7 @@ private:
     QVector<double> getPeakShapeMassAxisFromH5();
     QVector<double> getResolutionFromH5();
     QVector<double> getResolutionAxisFromH5();
-
+    QMap<double, QVector<double> > getMassDepPeakshapeFromH5();
 
     int getSecondDimCountFromH5(QString datasetName);
     int getSumSpecCountFromH5();
