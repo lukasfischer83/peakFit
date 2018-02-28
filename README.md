@@ -1,5 +1,5 @@
 # peakFit
-Anaylze TOF spectra to generate masslists
+Anaylze TOF spectra averaged by TOF-Tracer (https://github.com/lukasfischer83/TOF-Tracer) to generate masslists
 
 ## Requirements
 Needs qt5, eigen3, libhdf5 and qtcustomplot.
