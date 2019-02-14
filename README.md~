@@ -32,12 +32,3 @@ REBOOT to have mingw in Path
 - Grab a coffee
 
 The libs should now be in the target\bin folder.
-
-#### Compile in Qt Creator
-- Open Project
-- Adjust include Paths for eigen3 and HDF5 Lib in manualPeakFitter.pro
-- Run Qmake
-- Compile
-
-#### Optional: Compile Qt Statically and create standalone .exe
-TODO

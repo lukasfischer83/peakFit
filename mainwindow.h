@@ -9,7 +9,8 @@
 #include <masslibrary.h>
 
 #include "../libs/qcustomplot/qcustomplot.h"
-#include "../libs/eigen-eigen-b30b87236a1b/Eigen/Dense"
+//#include "../libs/eigen-eigen-b30b87236a1b/Eigen/Dense"
+#include <Dense>
 #include <iostream>
 //#include "E:\Devel\Apps\libs\HDF5-1.8.16-win32-mingw\HDF5-1.8.16-win32\include\H5Cpp.h"
 //#include "E:\Devel\Apps\libs\HDF5-1.8.16-win32-mingw\HDF5-1.8.16-win32\include\hdf5.h"

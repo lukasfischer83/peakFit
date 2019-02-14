@@ -24,11 +24,13 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui
 
-INCLUDEPATH += ../libs/eigen-eigen-b30b87236a1b/Eigen
+#INCLUDEPATH += ../libs/eigen-eigen-b30b87236a1b/Eigen
+INCLUDEPATH += ../libs/eigen-eigen-323c052e1731/Eigen
 
-win32:INCLUDEPATH += ../libs/HDF5-1.8.16-win32-mingw/HDF5-1.8.16-win32/include
-
-win32:LIBS += -L../libs/HDF5-1.8.16-win32-mingw/HDF5-1.8.16-win32/lib
+win32:INCLUDEPATH += ../libs/CMake-hdf5-1.8.16/CMake-hdf5-1.8.16/hdf5-1.8.16-build
+win32:INCLUDEPATH += ../libs/CMake-hdf5-1.8.16/CMake-hdf5-1.8.16/hdf5-1.8.16/src
+win32:INCLUDEPATH += ../libs/CMake-hdf5-1.8.16/CMake-hdf5-1.8.16/hdf5-1.8.16/c++/src
+win32:LIBS += -L../libs/hdf5-1.8.16-bin/bin
 
 linux:LIBS += -lhdf5 -lhdf5_cpp
 win32:LIBS += \
