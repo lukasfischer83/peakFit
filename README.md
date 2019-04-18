@@ -5,6 +5,20 @@ Anaylze TOF spectra averaged by TOF-Tracer (https://github.com/lukasfischer83/TO
 Needs Qt5, eigen3, libhdf5 and qtcustomplot.
 For static compilation (no dlls, running on every system) you need a statically compiled Qt5.
 
+
+### Compilation on Linux/Ubuntu:
+Download and install Qt5 and libhdf5 ( sudo apt install qtcreator libhdf5-serial )
+Unpack libs.zip to parent folder of source like this:
+
+peakFit
+   main.cpp
+   ...
+libs
+   qcustomplot
+   eigen-eigen232....
+
+start QT creator, load project file and run qmake and build all
+
 ### Compilation on Windows:
 Download and install Qt5 with MinGW as compiler
 Download eigen3 and extract next to peakFit directory
