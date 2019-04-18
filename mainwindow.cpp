@@ -834,6 +834,7 @@ void MainWindow::reloadSubSpectrum()
 
     subspectraGraph->setData(massAxis,substractVectors(datS,baseline));
 
+    ui->labelTime->setText(spectrumTimes[i-1].toString("dd.MM.yyyy hh:mm:ss.zzz"));
 }
 
 int MainWindow::getIndexOfValueInSortedVector(const QVector<double> *vec, double val)
@@ -1013,6 +1014,13 @@ void MainWindow::loadSpectrum()
         QVector<double> dat2 = get1DSliceFromH5("SumSpecMax");
         maxSumSpectrum->setData(massAxis,substractVectors(dat2,baseline));
 
+        // #################### Get Times of Subspectra and convert to DateTime #################
+        QVector<double> timesUnix = get1DSliceFromH5("AvgStickCpsTimes");
+        spectrumTimes.clear();
+        for (int i=0;i<timesUnix.count();i++) {
+            spectrumTimes.push_back(QDateTime::fromMSecsSinceEpoch((timesUnix[i]*1000.0)));
+        }
+
 
         try {
             // #################### Load preliminary masslist ######################
@@ -1021,13 +1029,14 @@ void MainWindow::loadSpectrum()
             QVector<double> masses = get1DSliceFromH5("MassList");
 
 
-            QVector<QString> elementNamesInFile;
+            QVector<QString> elementNamesInFile = QVector<QString>();
             elementNamesInFile.append("C");
             elementNamesInFile.append("C(13)");
             elementNamesInFile.append("H");
             elementNamesInFile.append("H+");
             elementNamesInFile.append("N");
             elementNamesInFile.append("O");
+            elementNamesInFile.append("O(18)");
             elementNamesInFile.append("S");
 
             QVector<element*> elementsInFile;
@@ -1519,7 +1528,7 @@ QVector<double> MainWindow::get2DSliceFromH5(QString datasetName, int secondDimI
 
 QVector<int> MainWindow::get2DIntSliceFromH5(QString datasetName, int secondDimIndex, int start, int end)
 {
-    QVector<int> dat ;
+    QVector<int> dat = QVector<int>();
 
     try
     {
@@ -1922,7 +1931,7 @@ QCPRange myQCP::getVisibleValueRange(QCPGraph *graph)
             if (it.value().value < min && it.value().value>1e-6)
                 min=it.value().value;
         }
-        qDebug() << "Rescale Range: Lower: " << min << " Upper: " << max;
+        //qDebug() << "Rescale Range: Lower: " << min << " Upper: " << max;
         return  QCPRange(min,max);
     }
     return QCPRange(0,0);

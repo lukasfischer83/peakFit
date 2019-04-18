@@ -178,6 +178,7 @@ private:
     QVector<double> getResolutionFromH5();
     QVector<double> getResolutionAxisFromH5();
     QMap<double, QVector<double> > getMassDepPeakshapeFromH5();
+    QVector<QDateTime> spectrumTimes;
 
     int getSecondDimCountFromH5(QString datasetName);
     int getSumSpecCountFromH5();

@@ -189,7 +189,7 @@ double molecule_t::calculateAbundance(composition_t composition)
     double totalAbundance = 1;
     for (composition_t::iterator it = composition.begin(); it != composition.end(); it++)
     {
-        if (it.key()->isotopeOf() != NULL && it.key()->isotopeOf() > 0) // If an isotope of an element is present, calculate its count and abundance
+        if (it.key()->isotopeOf() != NULL && it.key()->abundance() > 0) // If an isotope of an element is present, calculate its count and abundance
         {
             int countThisIsotope = it.value();
             int countParentElement = composition.find(it.key()->isotopeOf()).value();
