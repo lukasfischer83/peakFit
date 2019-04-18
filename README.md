@@ -16,9 +16,9 @@ peakFit
 libs
    qcustomplot
    eigen-eigen232....
-
-start QT creator, load project file and run qmake and build all
 ```
+start QT creator, load project file and run qmake and build all
+
 ### Compilation on Windows:
 Download and install Qt5 with MinGW as compiler
 Download eigen3 and extract next to peakFit directory
