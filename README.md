@@ -7,7 +7,7 @@ For static compilation (no dlls, running on every system) you need a statically 
 
 
 ### Compilation on Linux/Ubuntu:
-Download and install Qt5 and libhdf5 ( sudo apt install qtcreator libhdf5-serial )
+Download and install Qt5, mesa libs and libhdf5 ( sudo apt install qtcreator libhdf5-serial-dev mesa-common-dev libgl1-mesa-dev)
 Unpack libs.zip to parent folder of source like this:
 ```
 peakFit
