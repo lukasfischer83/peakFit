@@ -212,6 +212,7 @@ private slots:
     void saveToPDF();
     void addMassToLib();
     void clearMasslist();
+    void clearMasslistButtonPress();
 };
 
 #endif // MAINWINDOW_H

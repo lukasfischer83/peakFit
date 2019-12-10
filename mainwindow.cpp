@@ -212,7 +212,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->plot, SIGNAL(legendClick(QCPLegend*,QCPAbstractLegendItem*,QMouseEvent*)), this, SLOT(plotLegendClicked(QCPLegend*,QCPAbstractLegendItem*,QMouseEvent*)));
     connect(ui->horizontalSlider, SIGNAL(valueChanged(int)),this, SLOT(sliderMoved(int)));
     connect(ui->btnAddMass, SIGNAL(clicked()),this,SLOT(addMassToLib()));
-    connect(ui->btnClear,SIGNAL(clicked()),this,SLOT(clearMasslist()));
+    connect(ui->btnClear,SIGNAL(clicked()),this,SLOT(clearMasslistButtonPress()));
 
     connect(ui->massList, SIGNAL(itemClicked(QListWidgetItem*)),this, SLOT(massListClicked(QListWidgetItem*)));
     connect(ui->actionLoad_Spectrum,SIGNAL(triggered()),this,SLOT(loadSpectrum()));
@@ -2255,12 +2255,22 @@ void MainWindow::addMassToLib()
     }
 }
 
+void MainWindow::clearMasslistButtonPress()
+{
+    QMessageBox::StandardButton reply;
+      reply = QMessageBox::question(this, "Warning", "Do you really want to remove all masses?",
+                                    QMessageBox::Yes|QMessageBox::No);
+      if (reply == QMessageBox::Yes) {
+          this->clearMasslist();
+      }
+
+}
 void MainWindow::clearMasslist()
 {
-    ui->massList->clear();
-    markersMap.clear();
-    ui->plot->clearItems();
-    ui->plot->replot();
+        ui->massList->clear();
+        markersMap.clear();
+        ui->plot->clearItems();
+        ui->plot->replot();
 }
 
 
